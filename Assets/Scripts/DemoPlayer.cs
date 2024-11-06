@@ -10,7 +10,6 @@ public class DemoPlayer : MonoBehaviour
     public float timer;
     public float waitingTimeF;
     public float waitingTimeL;
-    public float waitingTimeLL;
 
     public float HP = 100;
 
@@ -23,8 +22,8 @@ public class DemoPlayer : MonoBehaviour
 
     public Vector3 dir;
 
-    private Transform target;
-    private int wavepointIndex = 0; //maximum 5
+    public Transform target;
+    public int wavepointIndex = 0; //maximum 5
 
     // Start is called before the first frame update
     void Start()
@@ -63,30 +62,12 @@ public class DemoPlayer : MonoBehaviour
             transform.Translate(dir.normalized * speed * 0.7f * Time.deltaTime, Space.World);
             _animator.SetBool("Walk", true);
         }
-        if (timer > waitingTimeF && timer < waitingTimeL)
+        else if (timer > waitingTimeF && timer < waitingTimeL)
         {
             transform.Translate(dir.normalized * speed * Time.deltaTime, Space.World);
             _animator.SetBool("Walk", true);
         }
-        if (timer > waitingTimeL)
-        {
-            timer = 0;
-            HP -= 10;
-            _animator.SetBool("Hit", true);
-            _animator.SetBool("Walk", false);
-        }
-        else if (timer > waitingTimeL && timer < waitingTimeLL)
-        {
-        }
-        else
-        {
-            _animator.SetBool("Hit", false);
-            _animator.SetBool("Walk", true);
-        }
-        if (HP <= 0)
-        {
-            Destroy(gameObject);
-        }
+        else timer = 0;
         PlayerDir();
         UpdateParams();
 
@@ -102,7 +83,6 @@ public class DemoPlayer : MonoBehaviour
     {
         if (wavepointIndex >= Waypoints.points.Length - 1)
         {
-            speed = 0;
             return;
         }
         wavepointIndex++;

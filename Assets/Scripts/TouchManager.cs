@@ -135,8 +135,8 @@ public class TouchManager : MonoBehaviour
         }
         if (isActive)
         {
-            this.transform.position = Vector3.Lerp(this.transform.position, target, moveSpeed * 10);
-            if (Vector3.Distance(this.transform.position, target) < 0.3f)
+            this.transform.position = Vector3.Lerp(this.transform.position, target, Time.deltaTime * 4);
+            if (Vector3.Distance(this.transform.position, target) < 0.2f)
             {
                 isActive = false;
             }
