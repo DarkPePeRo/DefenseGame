@@ -18,7 +18,6 @@ public class Test : MonoBehaviour
 
     public void ChapterUnlock(int chapterNum)
     {
-        DataManager.Instance.gameData.isClear[chapterNum] = true;
     }
     void Update()
     {

@@ -4,20 +4,22 @@ using UnityEngine;
 
 public class Spawn : MonoBehaviour
 {
-    public GameObject Monster;
+    public MultiPrefabPool objectPool;
     public float Timer;
-
+    public float spawnDelay;
     void Start()
     {
-        
+        objectPool = GameObject.Find("PoolManager").GetComponent<MultiPrefabPool>();
     }
 
     void Update()
     {
         Timer += Time.deltaTime;
-        if (Timer > 1)
+        if (Timer > spawnDelay)
         {
-            Instantiate(Monster, new Vector3(-5, -6, 0), Quaternion.identity);
+            
+            GameObject moster = objectPool.GetObject("Skeleton");
+            moster.transform.position = transform.position;
             Timer = 0;
         }
     }

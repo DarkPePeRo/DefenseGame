@@ -32,16 +32,22 @@ public class DemoPlayer : MonoBehaviour
         _animator = GetComponent<Animator>();
         if (_animator == null)
         {
-            Debug.LogError("[DemoPlayer.cs] Can't find 'Animator' component in scene." +
-                           " Add character prefab with 'Animator' component attached to it in the scene");
             return;
         }
 
-
+    
         _initialized = true;
 
 
         target = Waypoints.points[0]; //Enemy의 target으로 WayPoint로 지정 
+    }
+
+    private void OnEnable()
+    {
+        wavepointIndex = 0;
+        target = Waypoints.points[0];
+        timer = 0;
+        HP = 100;
     }
 
 
@@ -52,19 +58,19 @@ public class DemoPlayer : MonoBehaviour
             return;
         timer += Time.deltaTime;
 
-        dir = target.position - transform.position;
+        dir = (target.position - transform.position).normalized;
         if (Vector3.Distance(transform.position, target.position) <= 0.2f)
         {
             GetNextWayPoint();
         }
         if (timer < waitingTimeF)
         {
-            transform.Translate(dir.normalized * speed * 0.7f * Time.deltaTime, Space.World);
+            transform.Translate(dir * speed * 0.7f * Time.deltaTime, Space.World);
             _animator.SetBool("Walk", true);
         }
         else if (timer > waitingTimeF && timer < waitingTimeL)
         {
-            transform.Translate(dir.normalized * speed * Time.deltaTime, Space.World);
+            transform.Translate(dir * speed * Time.deltaTime, Space.World);
             _animator.SetBool("Walk", true);
         }
         else timer = 0;

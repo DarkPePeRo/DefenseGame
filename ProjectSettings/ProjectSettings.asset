@@ -71,8 +71,8 @@ PlayerSettings:
   androidUseSwappy: 1
   androidBlitType: 2
   androidResizableWindow: 1
-  androidDefaultWindowWidth: 2532
-  androidDefaultWindowHeight: 1170
+  androidDefaultWindowWidth: 1266
+  androidDefaultWindowHeight: 585
   androidMinimumWindowWidth: 400
   androidMinimumWindowHeight: 300
   androidFullscreenMode: 3

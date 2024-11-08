@@ -69,7 +69,6 @@ public class LoginUI : MonoBehaviour
             if (success)
             {
                 var serverAuthCode = PlayGamesPlatform.Instance.GetServerAuthCode();
-                Debug.Log("Server Auth Code: " + serverAuthCode);
 
                 PlayFabClientAPI.LoginWithGoogleAccount(new LoginWithGoogleAccountRequest()
                 {
@@ -83,14 +82,12 @@ public class LoginUI : MonoBehaviour
                 }, (error) =>
                 {
                     tmp.text = error.ToString();
-                    Debug.Log(error);
                     return;
                 }
                 );
             }
             else
             {
-                Debug.Log("Login Failed!");
             }
 
         });
@@ -118,7 +115,6 @@ public class LoginUI : MonoBehaviour
             else
             {
                 tmp.text = "Failed Login"; 
-                Debug.Log("Google Failed to Authorize your login");
             }
 
         });
@@ -137,12 +133,10 @@ public class LoginUI : MonoBehaviour
 
         private void PlayFabLogin_OnLoginSuccess(LoginResult result)
         {
-            Debug.Log("Login Success!");
         }
 
         private void PlayFabLogin_OnPlayFabError(PlayFabError error)
         {
-            Debug.Log("PlayFabError : " + error);
         }
     public void OnClickGoogleLogin() //구글 로그인 버튼
     {
@@ -159,7 +153,6 @@ public class LoginUI : MonoBehaviour
 
         if (Social.localUser.authenticated)
         {
-            Debug.Log("이미 구글 로그인 되어있는 상태입니다.");
             return;
         }
 
@@ -167,7 +160,6 @@ public class LoginUI : MonoBehaviour
         {
             if (!success)
             {
-                Debug.Log("구글 사용자 인증 실패!");
                 return;
             }
 
@@ -180,17 +172,14 @@ public class LoginUI : MonoBehaviour
             },
             result =>
             {
-                Debug.Log("플레이팹 구글 로그인 성공!");
                 OnLoginSuccess(result);
             },
             error =>
             {
-                Debug.Log("플레이팹 구글 로그인 실패!");
             });
         });
     }
     public void OnLoginSuccess(LoginResult result) //로그인 결과
     {
-        Debug.Log("Playfab Login Success");
     }
 }
