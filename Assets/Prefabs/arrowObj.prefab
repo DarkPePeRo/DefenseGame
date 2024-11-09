@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6023542778176634004}
   - component: {fileID: 816009206071146563}
   - component: {fileID: 5782920463284923598}
+  - component: {fileID: -4014259684066387400}
   m_Layer: 0
   m_Name: arrowObj
   m_TagString: Untagged
@@ -50,41 +51,34 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: -0.0066916514
-      value: -0.006927525
-      inSlope: 0.9032854
-      outSlope: 0.9032854
+      time: 0
+      value: 0
+      inSlope: 1.0069461
+      outSlope: 1.0069461
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.20266724
+      inWeight: 0
+      outWeight: 0.063042015
     - serializedVersion: 3
-      time: 0.5245758
-      value: 0.2632408
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 136
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.9966667
-      value: -0.00094249257
-      inSlope: -0.6513992
-      outSlope: -0.6513992
+      time: 1
+      value: 0.00063705444
+      inSlope: -1.1951095
+      outSlope: -1.1951095
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33648324
-      outWeight: 0.33333334
+      inWeight: 0.0722065
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  flightSpeed: 0.25
+  flightSpeed: 0.33
   hoverHeight: 2.5
+  damage: 40
   target: {fileID: 0}
-  first: {x: 0, y: 0, z: 0}
-  second: {x: 0, y: 0, z: 0}
-  objectPool: {fileID: 0}
+  spawn: {fileID: 0}
+  archer: {fileID: 0}
+  attackDistance: 0.5
+  plusDistance: 0.1
 --- !u!61 &5782920463284923598
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -117,7 +111,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0027321577, y: -0.013661087}
+  m_Offset: {x: 0.0048230886, y: -0.0042169215}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -128,8 +122,35 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.28416276, y: 0.16394556}
+  m_Size: {x: 0.15572229, y: 0.041172102}
   m_EdgeRadius: 0
+--- !u!50 &-4014259684066387400
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2436291868854469923}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &4906406707598875675
 GameObject:
   m_ObjectHideFlags: 0

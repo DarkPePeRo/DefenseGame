@@ -20,7 +20,7 @@ public class TouchManager : MonoBehaviour
     private float rotateSpeed = 0.1f;
     private const float ZoomSpeed = 1.0f; // 한번의 줌 입력의 줌 되는 정도
     private const float MinZoomSize = 2.0f; // 최소 카메라 사이즈
-    private const float MaxZoomSize = 4.0f; //  최대 카메라 사이즈
+    private const float MaxZoomSize = 5.0f; //  최대 카메라 사이즈
 
     private const float DirectionForceReduceRate = 0.935f; // 감속비율
     private const float DirectionForceMin = 0.001f; // 설정치 이하일 경우 움직임을 멈춤

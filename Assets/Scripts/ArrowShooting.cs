@@ -6,16 +6,18 @@ public class ArrowShooting : MonoBehaviour
     [SerializeField] private AnimationCurve curve;
     [SerializeField] private float flightSpeed = 2f;
     [SerializeField] private float hoverHeight = 2f;
+    public float damage;
 
-    private GameObject target;
+    public GameObject target;
+    private Vector3 targetdir;
     private Vector3 previousPosition;
     private MultiPrefabPool objectPool;
     private Animator bowAnimator = null;
-
-    public Vector3 first;
-    public Vector3 second;
+    public Spawn spawn;
+    public Archer archer;
 
     public float attackDistance = 0.5f;
+    public float plusDistance = 0.1f;
     private static bool hasPlayedAnimation = false; // 애니메이션이 실행되었는지 여부를 추적
 
     private void Start()
@@ -30,41 +32,50 @@ public class ArrowShooting : MonoBehaviour
         {
             Debug.LogError("Archer Animator not found! Please assign an Animator component to the Archer.");
         }
+        archer = FindObjectOfType<Archer>();
+        if (archer == null)
+        {
+            Debug.LogError("Archer not found!");
+        }
+        spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
+
     }
 
     private void OnEnable()
     {
         SetInitialValues();
-
-        // 애니메이션이 아직 실행되지 않았다면 실행
-        
-        // Animator가 null인지 확인하고, null이라면 다시 가져오기 시도
-        if (bowAnimator == null)
-        {
-            bowAnimator = FindObjectOfType<Bow>()?.GetComponent<Animator>();
-            if (bowAnimator == null)
-            {
-                Debug.LogError("Archer Animator not found! Please assign an Animator component to the Archer.");
-                return; // Animator가 없으면 나머지 코드 실행 중단
-            }
-        }
-        if (!hasPlayedAnimation)
-        {
-            bowAnimator?.SetTrigger("isAttack");
-            hasPlayedAnimation = true;
-        }
-        if (target != null)
-        {
-            StartCoroutine(IEFlight());
-        }
     }
 
     private void SetInitialValues()
     {
+        if (archer == null)
+        {
+            archer = FindObjectOfType<Archer>();
+        }
+        if (bowAnimator == null)
+        {
+            bowAnimator = FindObjectOfType<Bow>()?.GetComponent<Animator>();
+        }
+        if (!hasPlayedAnimation)
+        {
+            bowAnimator.SetTrigger("isAttack");
+            hasPlayedAnimation = true;
+        }
         // 타겟 및 시작 위치 설정
-        target = FindObjectOfType<Archer>()?.shortEnemyObject;
-        transform.position = FindObjectOfType<Archer>()?.transform.position ?? transform.position;
+        target = archer.shortEnemyObject;
+        if (target == null)
+        {
+            Debug.Log("null Target");
+            target = archer.shortEnemyObject;
+        }
+        transform.position = archer.transform.position;
         previousPosition = transform.position;
+
+        if (target != null)
+        {
+            targetdir = target.GetComponent<DemoPlayer>().dir;
+            StartCoroutine(IEFlight());
+        }
     }
 
     private IEnumerator IEFlight()
@@ -74,7 +85,9 @@ public class ArrowShooting : MonoBehaviour
         float duration = flightSpeed;
         float time = 0.0f;
         Vector3 start = transform.position;
-        Vector3 end = target.transform.position + transform.up * attackDistance + transform.forward * attackDistance;
+        Vector3 end = target.transform.position + targetdir * plusDistance;
+
+        Debug.Log(end);
 
         while (time < duration)
         {
@@ -85,14 +98,10 @@ public class ArrowShooting : MonoBehaviour
             float heightT = curve.Evaluate(linearT);
             float height = Mathf.Lerp(0.0f, hoverHeight, heightT);
 
-            second = transform.position;
-            Vector3 minus = second - first;
-            UpdateRotation(minus);
-            first = second;
-
-            transform.position = Vector2.Lerp(start, end, linearT) + new Vector2(0.0f, height);
-
-            previousPosition = transform.position;
+            Vector3 currentPosition = Vector2.Lerp(start, end, linearT) + new Vector2(0.0f, height);
+            UpdateRotation(currentPosition - previousPosition);
+            transform.position = currentPosition;
+            previousPosition = currentPosition;
 
             yield return null;
         }
@@ -108,11 +117,15 @@ public class ArrowShooting : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject == target)
+        if (other.gameObject == target )
         {
-            objectPool.ReturnObject(other.gameObject);
+            AttackNearbyTargets();
             ReturnToPool();
         }
+    }
+    public void GetAttacked()
+    {
+        target.GetComponent<DemoPlayer>().HP -= damage;
     }
 
     private void ReturnToPool()
@@ -126,5 +139,21 @@ public class ArrowShooting : MonoBehaviour
     public static void ResetAnimationTrigger()
     {
         hasPlayedAnimation = false;
+    }
+    private void AttackNearbyTargets()
+    {
+        // 공격 범위 내에 있는 모든 Collider2D 객체를 가져옴
+        Collider2D[] nearbyTargets = Physics2D.OverlapCircleAll(transform.position, attackDistance, LayerMask.GetMask("Enemy"));
+
+        foreach (var targetCollider in nearbyTargets)
+        {
+            // 각 객체에 대해 데미지를 적용
+            DemoPlayer targetPlayer = targetCollider.GetComponent<DemoPlayer>();
+            if (targetPlayer != null)
+            {
+                targetPlayer.HP -= damage;
+                Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.HP}");
+            }
+        }
     }
 }

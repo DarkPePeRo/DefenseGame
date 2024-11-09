@@ -1,8 +1,4 @@
-using System;
-using System.Collections;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class DemoPlayer : MonoBehaviour
 {
@@ -10,79 +6,101 @@ public class DemoPlayer : MonoBehaviour
     public float timer;
     public float waitingTimeF;
     public float waitingTimeL;
-
     public float HP = 100;
+
+    public MultiPrefabPool objectPool;
+    public PlayerCurrency currency;
 
     private static readonly int Vertical = Animator.StringToHash("Vertical");
     private static readonly int Horizontal = Animator.StringToHash("Horizontal");
 
-    private Vector2 _playerRotation = Vector2.zero;
+    public Vector2 _playerRotation = new Vector2(1, 1);
     public Animator _animator;
     private bool _initialized;
 
     public Vector3 dir;
+    public Vector3 normalizedDir;
+    private Transform target;
+    private int wavepointIndex = 0; //maximum 5
 
-    public Transform target;
-    public int wavepointIndex = 0; //maximum 5
-
-    // Start is called before the first frame update
     void Start()
     {
+        objectPool = GameObject.Find("PoolManager").GetComponent<MultiPrefabPool>();
+        if (objectPool == null)
+        {
+            Debug.LogError("Object Pool not found! Please assign a PoolManager with MultiPrefabPool component.");
+        }
 
         _animator = GetComponent<Animator>();
         if (_animator == null)
         {
-            return;
+            Debug.LogError("Animator not found!");
         }
+        currency = GameObject.Find("CurrencyManager").GetComponent<PlayerCurrency>();
 
-    
         _initialized = true;
+        target = Waypoints.points[0]; // Enemy의 target으로 WayPoint로 지정 
 
-
-        target = Waypoints.points[0]; //Enemy의 target으로 WayPoint로 지정 
+        _animator.SetFloat(Horizontal, 1);
+        _animator.SetFloat(Vertical, 1);
     }
 
     private void OnEnable()
     {
+        _animator = GetComponent<Animator>();
         wavepointIndex = 0;
         target = Waypoints.points[0];
         timer = 0;
         HP = 100;
+        _animator.SetFloat(Horizontal, 1);
+        _animator.SetFloat(Vertical, 1);
     }
 
-
-    // Update is called once per frame
     void Update()
     {
-        if(!_initialized)
+        if (!_initialized)
             return;
+
         timer += Time.deltaTime;
 
-        dir = (target.position - transform.position).normalized;
-        if (Vector3.Distance(transform.position, target.position) <= 0.2f)
+        dir = (target.position - transform.position);
+        float distanceSquared = dir.sqrMagnitude; // 두 벡터 거리의 제곱 계산
+        normalizedDir = dir.normalized;
+
+        if (distanceSquared <= 0.04f) // 0.2f * 0.2f == 0.04f
         {
             GetNextWayPoint();
         }
-        if (timer < waitingTimeF)
-        {
-            transform.Translate(dir * speed * 0.7f * Time.deltaTime, Space.World);
-            _animator.SetBool("Walk", true);
-        }
-        else if (timer > waitingTimeF && timer < waitingTimeL)
-        {
-            transform.Translate(dir * speed * Time.deltaTime, Space.World);
-            _animator.SetBool("Walk", true);
-        }
-        else timer = 0;
-        PlayerDir();
-        UpdateParams();
 
+        float currentSpeed = (timer < waitingTimeF) ? speed * 0.7f : speed;
+        
+        if (timer < waitingTimeL)
+        {
+            transform.Translate(normalizedDir * currentSpeed * Time.deltaTime, Space.World);
+        }
+        else
+        {
+            timer = 0;
+        }
+        _animator.SetBool("Walk", true);
+        UpdateParamsIfNeeded();
+        PlayerDir();
+        if(HP <= 0)
+        {
+            objectPool.ReturnObject(gameObject);
+            currency.AddCurrency(currency.gold, 100);
+        }
     }
 
-    private void UpdateParams()
+    private void UpdateParamsIfNeeded()
     {
-        _animator.SetFloat(Horizontal, _playerRotation.x);
-        _animator.SetFloat(Vertical, _playerRotation.y);
+        if (_playerRotation.x != Mathf.Sign(normalizedDir.x) || _playerRotation.y != Mathf.Sign(normalizedDir.y))
+        {
+            _playerRotation.x = Mathf.Sign(normalizedDir.x);
+            _playerRotation.y = Mathf.Sign(normalizedDir.y);
+            _animator.SetFloat("Horizontal", _playerRotation.x);
+            _animator.SetFloat("Vertical", _playerRotation.y);
+        }
     }
 
     private void GetNextWayPoint()
@@ -97,15 +115,7 @@ public class DemoPlayer : MonoBehaviour
 
     private void PlayerDir()
     {
-        if(dir.normalized.x > 0)
-        {
-            _playerRotation.x = 1;
-        }
-        else _playerRotation.x = -1;
-        if (dir.normalized.y > 0)
-        {
-            _playerRotation.y = 1;
-        }
-        else _playerRotation.y = -1;
+        _playerRotation.x = normalizedDir.x > 0 ? 1 : -1;
+        _playerRotation.y = normalizedDir.y > 0 ? 1 : -1;
     }
 }

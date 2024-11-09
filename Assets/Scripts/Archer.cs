@@ -27,47 +27,38 @@ public class Archer : MonoBehaviour
     {
         pos = transform.position;
         timer += Time.deltaTime;
+        if (timer > shotDelay - 0.1f)
+        {
+            colliders = Physics2D.OverlapCircleAll(transform.position, radius, layer);
+        }
         if (timer > shotDelay)
         {
-            if(colliders.Length > 0)
+            if (colliders.Length > 0)
             {
+                shortEnemy = colliders[colliders.Length - 1];
+                shortEnemyObject = shortEnemy.gameObject;
                 GameObject arrow = objectPool.GetObject("Arrow");
+                //float short_distance = Vector3.Distance(transform.position, colliders[0].transform.position);
+                //foreach (Collider2D col in colliders)
+                //{
+                //    float short_distance2 = Vector3.Distance(transform.position, col.transform.position);
+                //    if (short_distance > short_distance2)
+                //    {
+                //        short_distance = short_distance2;
+                //        shortEnemy = col;
+                //        shortEnemyObject = shortEnemy.gameObject;
+                //    }
+                //}
+                if (shortEnemyObject.transform.position.x < transform.position.x)
+                {
+                    transform.localScale = new Vector3(-0.6f, 0.6f, 1);
+                }
+                else
+                {
+                    transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                }
             }
             timer = 0;
-        }
-        colliders = Physics2D.OverlapCircleAll(transform.position, radius, layer);
-        if (colliders.Length == 1) { 
-            shortEnemy = colliders[0];
-            shortEnemyObject = shortEnemy.gameObject;
-            if (shortEnemyObject.transform.position.x < transform.position.x)
-            {
-                transform.localScale = new Vector3(-0.6f, 0.6f, 1);
-            }
-
-        }
-        if (colliders.Length > 0)
-        {
-            shortEnemy = colliders[colliders.Length-1];
-            shortEnemyObject = shortEnemy.gameObject;
-            //float short_distance = Vector3.Distance(transform.position, colliders[0].transform.position);
-            //foreach (Collider2D col in colliders)
-            //{
-            //    float short_distance2 = Vector3.Distance(transform.position, col.transform.position);
-            //    if (short_distance > short_distance2)
-            //    {
-            //        short_distance = short_distance2;
-            //        shortEnemy = col;
-            //        shortEnemyObject = shortEnemy.gameObject;
-            //    }
-            //}
-            if (shortEnemyObject.transform.position.x < transform.position.x)
-            {
-                transform.localScale = new Vector3(-0.6f, 0.6f, 1);
-            }
-            else
-            {
-                transform.localScale = new Vector3(0.6f, 0.6f, 1);
-            }
         }
     }
 
