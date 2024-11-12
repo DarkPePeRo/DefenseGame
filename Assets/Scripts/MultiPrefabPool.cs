@@ -11,6 +11,8 @@ public class MultiPrefabPool : MonoBehaviour
         public int size;            // 초기 풀 크기
     }
 
+    public MonsterStatsLoader statsLoader;
+    public MonsterData monsterData;
     public List<Pool> pools;         // 풀 목록을 인스펙터에서 관리할 수 있도록 설정
     private Dictionary<string, Queue<GameObject>> poolDictionary;
 
@@ -47,7 +49,20 @@ public class MultiPrefabPool : MonoBehaviour
 
         objectToSpawn.SetActive(true);
         poolDictionary[tag].Enqueue(objectToSpawn); // 사용한 오브젝트를 다시 큐에 넣기
-
+        
+        DemoPlayer demoPlayer = objectToSpawn.GetComponent<DemoPlayer>();
+        if (demoPlayer != null)
+        {
+            MonsterStat stat = statsLoader.GetMonsterStatByName(tag);
+            if (stat != null)
+            {
+                demoPlayer.SetStats(stat); // DemoPlayer에서 스탯 설정 메서드 호출
+            }
+            else
+            {
+                Debug.LogWarning($"Monster stat not found for {tag}");
+            }
+        }
         return objectToSpawn;
     }
 

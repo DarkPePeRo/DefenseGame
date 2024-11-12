@@ -127,6 +127,10 @@ MonoBehaviour:
   waitingTimeF: 0.2
   waitingTimeL: 0.8
   HP: 100
+  objectPool: {fileID: 0}
+  currency: {fileID: 0}
+  spawn: {fileID: 0}
+  hpBarPrefab: {fileID: 6176938791297818241, guid: a63882f195380904997e87caba98e38a, type: 3}
   _playerRotation: {x: 1, y: 1}
   _animator: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}

@@ -1,0 +1,22 @@
+{
+  "monsters": [
+    {
+      "name": "Skeleton",
+      "hp": 100,
+      "attack": 15,
+      "defense": 5
+    },
+    {
+      "name": "Orc",
+      "hp": 200,
+      "attack": 30,
+      "defense": 10
+    },
+    {
+      "name": "Dragon",
+      "hp": 1000,
+      "attack": 100,
+      "defense": 50
+    }
+  ]
+}

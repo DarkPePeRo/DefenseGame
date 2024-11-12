@@ -14,6 +14,7 @@ public class Currency
 
 public class PlayerCurrency : MonoBehaviour
 {
+    public static PlayerCurrency Instance;
     public Currency gold;
     public Currency diamond;
 
@@ -24,30 +25,38 @@ public class PlayerCurrency : MonoBehaviour
 
     public float timer;
 
+    private void Awake()
+    {
+        // 싱글톤 패턴 구현
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // 오브젝트 유지
+        }
+        else
+        {
+            Destroy(gameObject); // 중복된 오브젝트는 제거
+        }
+    }
+
     private void Start()
     {
-        gold = new Currency { name = "Gold", amount = 0 };
-        diamond = new Currency { name = "Diamond", amount = 0 };
+        gold = new Currency { name = "gold", amount = 0 };
+        diamond = new Currency { name = "diamond", amount = 0 };
     }
 
     private void Update()
     {
-        goldText.text = gold.amount.ToString() + "G";
-        diamondText.text = diamond.amount.ToString() + "G";
-        timer += Time.deltaTime;
-        if (timer > 10)
-        {
-            playFab.SavePlayerData("gold", gold.amount);
-            playFab.SavePlayerData("diamond", diamond.amount);
-            timer = 0;
-        }
     }
 
 
-    public void AddCurrency(Currency currency, int amount)
+    public void AddCurrency(Currency gold, int amountGold, Currency diamond, int amountDiamond)
     {
-        currency.amount += amount;
-        Debug.Log($"{currency.name} added: {amount}. New total: {currency.amount}");
+        gold.amount += amountGold;
+        diamond.amount += amountDiamond;
+        Debug.Log($"{gold.name} added: {amountGold}. New total: {gold.amount}");
+        Debug.Log($"{diamond.name} added: {amountDiamond}. New total: {diamond.amount}");
+        Debug.Log("Saved");
     }
 
     public bool SpendCurrency(Currency currency, int amount)

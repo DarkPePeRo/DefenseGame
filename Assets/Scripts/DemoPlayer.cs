@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DemoPlayer : MonoBehaviour
 {
@@ -10,6 +11,14 @@ public class DemoPlayer : MonoBehaviour
 
     public MultiPrefabPool objectPool;
     public PlayerCurrency currency;
+    private MonsterStat monsterStat;
+    public Spawn spawn;
+    public MonsterStatsLoader monsterStatsLoader;
+    public WaveSystem waveSystem;
+
+    public GameObject hpBarPrefab;
+    public Slider hpBarSlider;
+    private Transform hpBarTransform;
 
     private static readonly int Vertical = Animator.StringToHash("Vertical");
     private static readonly int Horizontal = Animator.StringToHash("Horizontal");
@@ -22,24 +31,21 @@ public class DemoPlayer : MonoBehaviour
     public Vector3 normalizedDir;
     private Transform target;
     private int wavepointIndex = 0; //maximum 5
-
+    private void Awake()
+    {
+        objectPool = GameObject.Find("PoolManager")?.GetComponent<MultiPrefabPool>();
+        currency = GameObject.Find("CurrencyManager")?.GetComponent<PlayerCurrency>();
+        spawn = GameObject.Find("Spawn")?.GetComponent<Spawn>();
+        monsterStatsLoader = GameObject.Find("StatLoader")?.GetComponent<MonsterStatsLoader>();
+        _animator = GetComponent<Animator>();
+        waveSystem = GameObject.Find("WaveSystem")?.GetComponent<WaveSystem>();
+    }
     void Start()
     {
-        objectPool = GameObject.Find("PoolManager").GetComponent<MultiPrefabPool>();
-        if (objectPool == null)
-        {
-            Debug.LogError("Object Pool not found! Please assign a PoolManager with MultiPrefabPool component.");
-        }
-
-        _animator = GetComponent<Animator>();
-        if (_animator == null)
-        {
-            Debug.LogError("Animator not found!");
-        }
-        currency = GameObject.Find("CurrencyManager").GetComponent<PlayerCurrency>();
-
         _initialized = true;
         target = Waypoints.points[0]; // Enemy의 target으로 WayPoint로 지정 
+
+        Initialize("Skeleton", monsterStatsLoader);
 
         _animator.SetFloat(Horizontal, 1);
         _animator.SetFloat(Vertical, 1);
@@ -47,13 +53,21 @@ public class DemoPlayer : MonoBehaviour
 
     private void OnEnable()
     {
-        _animator = GetComponent<Animator>();
+        
         wavepointIndex = 0;
         target = Waypoints.points[0];
         timer = 0;
-        HP = 100;
         _animator.SetFloat(Horizontal, 1);
         _animator.SetFloat(Vertical, 1);
+        if (hpBarSlider == null)
+        {
+            GameObject hpBarInstance = Instantiate(hpBarPrefab, transform.position + new Vector3(0, 0.66f, 0), Quaternion.identity, this.transform);
+            hpBarSlider = hpBarInstance.GetComponentInChildren<Slider>();
+            hpBarTransform = hpBarInstance.transform;
+        }
+        Initialize("Skeleton", monsterStatsLoader);
+        HP = monsterStat != null ? monsterStat.hp : HP; // 초기 체력 설정
+        ResetHpBar(); // 체력 바 초기화
     }
 
     void Update()
@@ -85,10 +99,17 @@ public class DemoPlayer : MonoBehaviour
         _animator.SetBool("Walk", true);
         UpdateParamsIfNeeded();
         PlayerDir();
-        if(HP <= 0)
+        if (HP < monsterStat.hp) hpBarSlider.gameObject.SetActive(true);
+        if (HP > 0)
+        {
+            UpdateHpBar();
+        }
+        else
         {
             objectPool.ReturnObject(gameObject);
-            currency.AddCurrency(currency.gold, 100);
+            currency.AddCurrency(currency.gold, 100, currency.diamond, 0);
+            waveSystem.OnEnemyDefeated();
+            hpBarSlider.gameObject.SetActive(false);
         }
     }
 
@@ -117,5 +138,41 @@ public class DemoPlayer : MonoBehaviour
     {
         _playerRotation.x = normalizedDir.x > 0 ? 1 : -1;
         _playerRotation.y = normalizedDir.y > 0 ? 1 : -1;
+    }
+    public void Initialize(string monsterName, MonsterStatsLoader statsLoader)
+    {
+        // JSON을 다시 읽지 않고 캐시된 데이터에서 스탯을 가져옴
+        monsterStat = statsLoader.GetMonsterStatByName(monsterName);
+        if (monsterStat != null)
+        {
+            Debug.Log($"Initialized Monster: {monsterStat.name} - HP: {monsterStat.hp}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
+        }
+        else
+        {
+            Debug.LogError("Monster stat not found for " + monsterName);
+        }
+    }
+    public void SetStats(MonsterStat stat)
+    {
+        monsterStat = stat;
+        HP = monsterStat.hp; // HP를 설정
+        Debug.Log($"Monster stats set: {monsterStat.name} - HP: {monsterStat.hp}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
+    }
+    public void ResetHpBar()
+    {
+        HP = monsterStat != null ? monsterStat.hp : HP; // HP 초기화
+        if (hpBarSlider != null)
+        {
+            hpBarSlider.value = 1;
+            hpBarSlider.gameObject.SetActive(false);
+            UpdateHpBar();
+        }
+    }
+    private void UpdateHpBar()
+    {
+        if (hpBarSlider != null)
+        {
+            hpBarSlider.value = HP / monsterStat.hp;
+        }
     }
 }

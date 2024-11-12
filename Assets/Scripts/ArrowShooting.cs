@@ -1,12 +1,17 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class ArrowShooting : MonoBehaviour
 {
+    [SerializeField] private GameObject damageTextPrefab; // Inspector에서 DamageTextPrefab 할당
     [SerializeField] private AnimationCurve curve;
     [SerializeField] private float flightSpeed = 2f;
     [SerializeField] private float hoverHeight = 2f;
-    public float damage;
+    private DamageUIManager damageUIManager; // DamageUIManager 참조
+
+    public int baseDamage;
+    public int damage;
 
     public GameObject target;
     private Vector3 targetdir;
@@ -37,8 +42,10 @@ public class ArrowShooting : MonoBehaviour
         {
             Debug.LogError("Archer not found!");
         }
+        damageUIManager = FindObjectOfType<DamageUIManager>();
         spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
 
+        SetRandomDamage();
     }
 
     private void OnEnable()
@@ -142,6 +149,9 @@ public class ArrowShooting : MonoBehaviour
     }
     private void AttackNearbyTargets()
     {
+        // 데미지 텍스트를 띄울 때마다 새로운 랜덤 데미지 설정
+        SetRandomDamage();
+
         // 공격 범위 내에 있는 모든 Collider2D 객체를 가져옴
         Collider2D[] nearbyTargets = Physics2D.OverlapCircleAll(transform.position, attackDistance, LayerMask.GetMask("Enemy"));
 
@@ -152,8 +162,16 @@ public class ArrowShooting : MonoBehaviour
             if (targetPlayer != null)
             {
                 targetPlayer.HP -= damage;
+                damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
                 Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.HP}");
             }
         }
     }
+    private void SetRandomDamage()
+    {
+        int minDamage = Mathf.FloorToInt(baseDamage * 0.9f); // 최소 10% 감소
+        int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f); // 최대 10% 증가
+        damage = Random.Range(minDamage, maxDamage + 1); // 정수형 랜덤 데미지
+    }
+
 }

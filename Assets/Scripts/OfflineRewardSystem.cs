@@ -2,18 +2,34 @@ using UnityEngine;
 
 public class OfflineRewardSystem : MonoBehaviour
 {
-    public PlayerCurrency player; 
+    public static OfflineRewardSystem Instance;
+
+    private void Awake()
+    {
+        // 싱글톤 패턴 구현
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // 오브젝트 유지
+        }
+        else
+        {
+            Destroy(gameObject); // 중복된 오브젝트는 제거
+        }
+    }
     private void OnApplicationPause(bool pause)
     {
         if (pause)
         {
             SaveLastLogoutTime();
+            PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
         }
     }
 
     private void OnApplicationQuit()
     {
         SaveLastLogoutTime();
+        PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
     }
 
     private void SaveLastLogoutTime()
@@ -40,14 +56,15 @@ public class OfflineRewardSystem : MonoBehaviour
         if (offlineSeconds > 0)
         {
             int reward = Mathf.FloorToInt((float)(offlineSeconds * rewardPerSecond));
-            AddCurrency(reward);
+            AddCurrency(reward, 0);
             Debug.Log($"오프라인 보상 지급: {reward} 코인");
         }
     }
 
-    private void AddCurrency(int amount)
+    private void AddCurrency(int amountGold, int amountDiamond)
     {
-        player.AddCurrency(player.gold, amount);
+        PlayerCurrency.Instance.AddCurrency(PlayerCurrency.Instance.gold, amountGold, PlayerCurrency.Instance.diamond, amountDiamond);
+        PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
     }
 
 }
