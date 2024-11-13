@@ -8,6 +8,7 @@ public class LoadingManager : MonoBehaviour
 {
     [SerializeField] private Slider progressBar; // 로딩 바
     [SerializeField] private TextMeshProUGUI progressText;  // 로딩 텍스트
+    [SerializeField] private TextMeshProUGUI EndText;  // 로딩 텍스트
 
     public void LoadScene(string sceneName)
     {
@@ -32,7 +33,8 @@ public class LoadingManager : MonoBehaviour
             // 로딩이 90% 이상 완료되었을 때 전환
             if (operation.progress >= 0.9f)
             {
-                progressText.text = "Press Any Key to Continue"; // 텍스트 변경
+                EndText.text = "Press anywhere to Start Game";
+                progressText.text = "Loading Success"; // 텍스트 변경
                 if (Input.anyKeyDown)
                 {
                     operation.allowSceneActivation = true; // 씬 전환 허용

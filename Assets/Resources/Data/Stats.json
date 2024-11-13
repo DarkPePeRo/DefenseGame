@@ -4,19 +4,29 @@
       "name": "Skeleton",
       "hp": 100,
       "attack": 15,
-      "defense": 5
+      "defense": 5,
+      "gold" : 100
     },
     {
       "name": "Orc",
       "hp": 200,
       "attack": 30,
-      "defense": 10
+      "defense": 5,
+      "gold" : 100
     },
     {
       "name": "Dragon",
       "hp": 1000,
       "attack": 100,
-      "defense": 50
+      "defense": 5,
+      "gold" : 100
+    },
+    {
+        "name": "SkeletonBoss",
+        "hp": 500,
+        "attack": 100,
+        "defense": 5,
+        "gold" : 10000
     }
   ]
 }

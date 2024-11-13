@@ -7,7 +7,8 @@ public class DemoPlayer : MonoBehaviour
     public float timer;
     public float waitingTimeF;
     public float waitingTimeL;
-    public float HP = 100;
+    public float MaxHP;
+    public float CurrentHP = 100;
 
     public MultiPrefabPool objectPool;
     public PlayerCurrency currency;
@@ -65,8 +66,11 @@ public class DemoPlayer : MonoBehaviour
             hpBarSlider = hpBarInstance.GetComponentInChildren<Slider>();
             hpBarTransform = hpBarInstance.transform;
         }
-        Initialize("Skeleton", monsterStatsLoader);
-        HP = monsterStat != null ? monsterStat.hp : HP; // 초기 체력 설정
+        Initialize("Skeleton", monsterStatsLoader);  
+        // 웨이브별 체력과 골드 설정 적용
+        float healthMultiplier = waveSystem.GetHealthMultiplier();
+        MaxHP = (monsterStat != null ? monsterStat.hp : MaxHP) * healthMultiplier; // 웨이브별 체력 배수 적용
+        CurrentHP = MaxHP;
         ResetHpBar(); // 체력 바 초기화
     }
 
@@ -99,15 +103,15 @@ public class DemoPlayer : MonoBehaviour
         _animator.SetBool("Walk", true);
         UpdateParamsIfNeeded();
         PlayerDir();
-        if (HP < monsterStat.hp) hpBarSlider.gameObject.SetActive(true);
-        if (HP > 0)
+        if (CurrentHP < MaxHP) hpBarSlider.gameObject.SetActive(true);
+        if (CurrentHP > 0)
         {
             UpdateHpBar();
         }
         else
         {
             objectPool.ReturnObject(gameObject);
-            currency.AddCurrency(currency.gold, 100, currency.diamond, 0);
+            currency.AddCurrency(currency.gold, waveSystem.GetGoldReward(), currency.diamond, 0);
             waveSystem.OnEnemyDefeated();
             hpBarSlider.gameObject.SetActive(false);
         }
@@ -145,7 +149,7 @@ public class DemoPlayer : MonoBehaviour
         monsterStat = statsLoader.GetMonsterStatByName(monsterName);
         if (monsterStat != null)
         {
-            Debug.Log($"Initialized Monster: {monsterStat.name} - HP: {monsterStat.hp}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
+            Debug.Log($"Initialized Monster: {monsterStat.name} - HP: {MaxHP}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
         }
         else
         {
@@ -155,12 +159,11 @@ public class DemoPlayer : MonoBehaviour
     public void SetStats(MonsterStat stat)
     {
         monsterStat = stat;
-        HP = monsterStat.hp; // HP를 설정
-        Debug.Log($"Monster stats set: {monsterStat.name} - HP: {monsterStat.hp}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
+        MaxHP = monsterStat.hp * waveSystem.GetHealthMultiplier(); // HP를 설정
+        Debug.Log($"Monster stats set: {monsterStat.name} - HP: {MaxHP}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
     }
     public void ResetHpBar()
     {
-        HP = monsterStat != null ? monsterStat.hp : HP; // HP 초기화
         if (hpBarSlider != null)
         {
             hpBarSlider.value = 1;
@@ -172,7 +175,7 @@ public class DemoPlayer : MonoBehaviour
     {
         if (hpBarSlider != null)
         {
-            hpBarSlider.value = HP / monsterStat.hp;
+            hpBarSlider.value = CurrentHP / MaxHP;
         }
     }
 }

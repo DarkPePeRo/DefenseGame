@@ -4,11 +4,14 @@ using TMPro;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 using static UnityEngine.GraphicsBuffer;
 
 public class TouchManager : MonoBehaviour
 {
+    public Vector2 mapMinPosition; // 맵의 최소 위치 (월드 좌표 기준)
+    public Vector2 mapMaxPosition; // 맵의 최대 위치 (월드 좌표 기준)
     //줌 속도 변수
     private float perspectiveZoomSpeed = 0.008f;
 
@@ -20,10 +23,10 @@ public class TouchManager : MonoBehaviour
     private float rotateSpeed = 0.1f;
     private const float ZoomSpeed = 1.0f; // 한번의 줌 입력의 줌 되는 정도
     private const float MinZoomSize = 2.0f; // 최소 카메라 사이즈
-    private const float MaxZoomSize = 5.0f; //  최대 카메라 사이즈
+    private const float MaxZoomSize = 3.5f; //  최대 카메라 사이즈
 
     private const float DirectionForceReduceRate = 0.935f; // 감속비율
-    private const float DirectionForceMin = 0.001f; // 설정치 이하일 경우 움직임을 멈춤
+    private const float DirectionForceMin = 0.1f; // 설정치 이하일 경우 움직임을 멈춤
 
     // 변수 : 이동 관련
     private bool _userMoveInput; // 현재 조작을 하고있는지 확인을 위한 변수
@@ -35,6 +38,11 @@ public class TouchManager : MonoBehaviour
     public Vector3 target;
     void LateUpdate()
     {
+        // UI를 드래그 중이면 카메라 제어를 하지 않음
+        if (IsPointerOverUIObject())
+        {
+            return;
+        }
         // 마우스 휠 카메라 줌
         ControllerZoom();
 
@@ -49,6 +57,11 @@ public class TouchManager : MonoBehaviour
 
         //// 터치 시 카메라 이동 관련
         //TouchCameraMove();
+    }
+    private bool IsPointerOverUIObject()
+    {
+        // 마우스 포인터나 터치 위치가 UI 요소 위에 있는지 확인
+        return EventSystem.current.IsPointerOverGameObject();
     }
     private void ControllerZoom()
     {
@@ -149,8 +162,26 @@ public class TouchManager : MonoBehaviour
                 isActiveZoom = false;
             }
         }
+        // 카메라의 orthographicSize와 종횡비에 따른 가시 범위 계산
+        Camera cam = GetComponent<Camera>();
+        float cameraHeight = cam.orthographicSize * 2;
+        float cameraWidth = cameraHeight * cam.aspect;
+
+        // 카메라 이동 범위 계산
+        float minX = mapMinPosition.x + cameraWidth / 2;
+        float maxX = mapMaxPosition.x - cameraWidth / 2;
+        float minY = mapMinPosition.y + cameraHeight / 2;
+        float maxY = mapMaxPosition.y - cameraHeight / 2;
+
+        // 카메라의 현재 위치와 방향 이동값 계산
         var currentPosition = transform.position;
         var targetPosition = currentPosition + _directionForce;
+
+        // 카메라 위치를 가시 범위 내로 제한
+        targetPosition.x = Mathf.Clamp(targetPosition.x, minX, maxX);
+        targetPosition.y = Mathf.Clamp(targetPosition.y, minY, maxY);
+
+        // 제한된 위치로 카메라 이동
         transform.position = Vector3.Lerp(currentPosition, targetPosition, 0.5f);
     }
 

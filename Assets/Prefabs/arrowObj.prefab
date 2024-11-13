@@ -72,13 +72,14 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  flightSpeed: 0.33
+  flightSpeed: 0.2
   hoverHeight: 2.5
-  baseDamage: 10
+  baseDamage: 20
   damage: 0
   target: {fileID: 0}
   spawn: {fileID: 0}
   archer: {fileID: 0}
+  waveSystem: {fileID: 0}
   attackDistance: 1
   plusDistance: 0.05
 --- !u!61 &5782920463284923598

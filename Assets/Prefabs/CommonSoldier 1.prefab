@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 2129815214727835118}
   m_Layer: 6
   m_Name: CommonSoldier 1
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -98,7 +98,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: -7008412969330441016, guid: 4a7c0da22d195094c996d9182a363b82, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -126,11 +126,15 @@ MonoBehaviour:
   timer: 0
   waitingTimeF: 0.2
   waitingTimeL: 0.8
-  HP: 100
+  MaxHP: 0
+  CurrentHP: 100
   objectPool: {fileID: 0}
   currency: {fileID: 0}
   spawn: {fileID: 0}
-  hpBarPrefab: {fileID: 6176938791297818241, guid: a63882f195380904997e87caba98e38a, type: 3}
+  monsterStatsLoader: {fileID: 0}
+  waveSystem: {fileID: 0}
+  hpBarPrefab: {fileID: 6800500202735510327, guid: 4bd1fb9838fc2f5408772bdfaf806dcb, type: 3}
+  hpBarSlider: {fileID: 0}
   _playerRotation: {x: 1, y: 1}
   _animator: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}

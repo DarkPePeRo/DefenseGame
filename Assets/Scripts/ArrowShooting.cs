@@ -6,11 +6,11 @@ public class ArrowShooting : MonoBehaviour
 {
     [SerializeField] private GameObject damageTextPrefab; // Inspector에서 DamageTextPrefab 할당
     [SerializeField] private AnimationCurve curve;
-    [SerializeField] private float flightSpeed = 2f;
-    [SerializeField] private float hoverHeight = 2f;
+    [SerializeField] private float flightSpeed;
+    [SerializeField] private float hoverHeight;
     private DamageUIManager damageUIManager; // DamageUIManager 참조
 
-    public int baseDamage;
+    public float baseDamage;
     public int damage;
 
     public GameObject target;
@@ -20,6 +20,7 @@ public class ArrowShooting : MonoBehaviour
     private Animator bowAnimator = null;
     public Spawn spawn;
     public Archer archer;
+    public WaveSystem waveSystem;
 
     public float attackDistance = 0.5f;
     public float plusDistance = 0.1f;
@@ -42,10 +43,12 @@ public class ArrowShooting : MonoBehaviour
         {
             Debug.LogError("Archer not found!");
         }
+        waveSystem = FindObjectOfType<WaveSystem>();
         damageUIManager = FindObjectOfType<DamageUIManager>();
         spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
 
-        SetRandomDamage();
+        SetRandomDamage(); 
+        bowAnimator.SetBool("isAttack", false);
     }
 
     private void OnEnable()
@@ -65,42 +68,48 @@ public class ArrowShooting : MonoBehaviour
         }
         if (!hasPlayedAnimation)
         {
-            bowAnimator.SetTrigger("isAttack");
             hasPlayedAnimation = true;
         }
-        // 타겟 및 시작 위치 설정
         target = archer.shortEnemyObject;
+
         if (target == null)
         {
-            Debug.Log("null Target");
-            target = archer.shortEnemyObject;
+            Debug.Log("Null Target");
+            return;
         }
-        transform.position = archer.transform.position;
-        previousPosition = transform.position;
 
-        if (target != null)
+        if (target.tag == "Enemy")
         {
+            transform.position = archer.transform.position;
+            previousPosition = transform.position;
             targetdir = target.GetComponent<DemoPlayer>().dir;
+            Debug.Log("StartIEFight");
+            StartCoroutine(IEFlight());
+        }
+        if(target.tag == "Boss")
+        {
+            transform.position = archer.transform.position;
+            previousPosition = transform.position;
+            targetdir = target.GetComponent<Boss>().dir;
             StartCoroutine(IEFlight());
         }
     }
 
     private IEnumerator IEFlight()
     {
+        Debug.Log("StartIEFight");
         if (target == null) yield break;
-
         float duration = flightSpeed;
         float time = 0.0f;
-        Vector3 start = transform.position;
-        Vector3 end = target.transform.position + targetdir * plusDistance;
+        Vector3 start = target.transform.position.x < transform.position.x ? transform.position + new Vector3(-0.2f, 0.2f, 0) : transform.position + new Vector3(0.2f, 0.2f, 0);
+        Vector3 end = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.3f, 0);
 
         Debug.Log(end);
 
         while (time < duration)
         {
-            if (target == null) yield break;
-
             time += Time.deltaTime;
+            bowAnimator.SetBool("isAttack", true);
             float linearT = time / duration;
             float heightT = curve.Evaluate(linearT);
             float height = Mathf.Lerp(0.0f, hoverHeight, heightT);
@@ -112,7 +121,11 @@ public class ArrowShooting : MonoBehaviour
 
             yield return null;
         }
-
+        bowAnimator.SetBool("isAttack", false); 
+        if (target != null)
+        {
+            AttackTargetDirectly();
+        }
         ReturnToPool();
     }
 
@@ -122,18 +135,14 @@ public class ArrowShooting : MonoBehaviour
         transform.eulerAngles = new Vector3(0.0f, 0.0f, angle);
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.gameObject == target )
-        {
-            AttackNearbyTargets();
-            ReturnToPool();
-        }
-    }
-    public void GetAttacked()
-    {
-        target.GetComponent<DemoPlayer>().HP -= damage;
-    }
+    //private void OnTriggerEnter2D(Collider2D other)
+    //{
+    //    if (other.gameObject == target)
+    //    {
+    //        AttackNearbyTargets();
+    //        ReturnToPool();
+    //    }
+    //}
 
     private void ReturnToPool()
     {
@@ -161,17 +170,51 @@ public class ArrowShooting : MonoBehaviour
             DemoPlayer targetPlayer = targetCollider.GetComponent<DemoPlayer>();
             if (targetPlayer != null)
             {
-                targetPlayer.HP -= damage;
+                targetPlayer.CurrentHP -= damage;
                 damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.HP}");
+                Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
             }
         }
     }
     private void SetRandomDamage()
     {
-        int minDamage = Mathf.FloorToInt(baseDamage * 0.9f); // 최소 10% 감소
-        int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f); // 최대 10% 증가
+        int minDamage = Mathf.FloorToInt(baseDamage * 0.9f * waveSystem.GetArrowDamageMultiplier()); // 최소 10% 감소
+        int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f * waveSystem.GetArrowDamageMultiplier()); // 최대 10% 증가
         damage = Random.Range(minDamage, maxDamage + 1); // 정수형 랜덤 데미지
     }
-
+    private void AttackTargetDirectly()
+    {
+        SetRandomDamage();
+        if(target == null)
+        {
+            Debug.Log("NullTargetnow");
+        }
+        // 타겟이 존재할 때 바로 피격 판정을 수행
+        if (target.tag == "Enemy")
+        {
+            DemoPlayer targetPlayer = target.GetComponent<DemoPlayer>();
+            if (targetPlayer != null)
+            {
+                if (targetPlayer.CurrentHP > 0)
+                {
+                    targetPlayer.CurrentHP -= damage;
+                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
+                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
+                }
+            }
+        }
+        if (target.tag == "Boss")
+        {
+            Boss targetPlayer = target.GetComponent<Boss>();
+            if (targetPlayer != null)
+            {
+                if (targetPlayer.CurrentHP > 0)
+                {
+                    targetPlayer.CurrentHP -= damage;
+                    damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.5f, 0), damage);
+                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
+                }
+            }
+        }
+    }
 }

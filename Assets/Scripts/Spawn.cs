@@ -10,6 +10,7 @@ public class Spawn : MonoBehaviour
     public int maxSpawnCount = 100; // 최대 스폰 수 제한
     public int currentSpawnCount = 0;
     public WaveSystem waveSystem;
+    public EndLine endLine;
 
     void Start()
     {
@@ -35,6 +36,11 @@ public class Spawn : MonoBehaviour
     {
         while(currentSpawnCount < waveSystem.enemyCountPerWave)
         {
+            if(endLine.isEnd == true)
+            {
+                waveSystem.AgainWave();
+                currentSpawnCount = 0;
+            }
             Timer += Time.deltaTime;
 
             // 일정 간격으로 스폰 및 최대 수 제한 확인
