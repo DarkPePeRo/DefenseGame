@@ -83,7 +83,6 @@ public class ArrowShooting : MonoBehaviour
             transform.position = archer.transform.position;
             previousPosition = transform.position;
             targetdir = target.GetComponent<DemoPlayer>().dir;
-            Debug.Log("StartIEFight");
             StartCoroutine(IEFlight());
         }
         if(target.tag == "Boss")
@@ -97,14 +96,12 @@ public class ArrowShooting : MonoBehaviour
 
     private IEnumerator IEFlight()
     {
-        Debug.Log("StartIEFight");
         if (target == null) yield break;
         float duration = flightSpeed;
         float time = 0.0f;
         Vector3 start = target.transform.position.x < transform.position.x ? transform.position + new Vector3(-0.2f, 0.2f, 0) : transform.position + new Vector3(0.2f, 0.2f, 0);
         Vector3 end = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.3f, 0);
 
-        Debug.Log(end);
 
         while (time < duration)
         {

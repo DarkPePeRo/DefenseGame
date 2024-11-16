@@ -92,7 +92,9 @@ public class WaveSystem : MonoBehaviour
 
     public void OnBossDefeated()
     {
-        leaderBoard.SendScore(currentWave);
+        int currentScore = currentWave;
+        // PlayFabManager를 통해 점수 갱신
+        PlayFabLogin.Instance.UpdateScore(currentWave);
         currentWave++;
         spawn.currentSpawnCount = 0;
         bossHPUI.SetActive(false);

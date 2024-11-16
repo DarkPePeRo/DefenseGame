@@ -7,21 +7,29 @@ using UnityEngine;
 public class LeaderBoardUI : MonoBehaviour
 {
     public PlayFabLeaderBoard playFabLeaderBoard;
-    public TextMeshProUGUI leaderboardText;
+    public TextMeshProUGUI[] leaderboardRank = new TextMeshProUGUI[10];
+    public TextMeshProUGUI[] leaderboardName = new TextMeshProUGUI[10];
+    public TextMeshProUGUI[] leaderboardScore = new TextMeshProUGUI[10];
     public void Start()
     {
         playFabLeaderBoard.GetLeaderboard();
     }
-
     public void ShowLeaderboard(List<PlayerLeaderboardEntry> leaderboardEntries)
     {
-        // 리더보드 텍스트 초기화
-        leaderboardText.text = "Leaderboard\n\n";
-
-        // 리더보드 데이터 순회하여 텍스트에 추가
-        foreach (var entry in leaderboardEntries)
+        // 텍스트 초기화
+        for (int i = 0; i < leaderboardName.Length; i++)
         {
-            leaderboardText.text += $"Rank: {entry.Position + 1} | Player: {entry.DisplayName ?? "Guest"} | Score: {entry.StatValue}\n";
+            if (i < leaderboardEntries.Count)
+            {
+                var entry = leaderboardEntries[i];
+                leaderboardName[i].text = $"Player: {entry.DisplayName ?? "Guest"}";
+                leaderboardScore[i].text = $"Score: {entry.StatValue}";
+            }
+            else
+            {
+                leaderboardName[i].text = ""; // 빈 텍스트로 설정하여 표시되지 않도록 처리
+                leaderboardScore[i].text = ""; // 빈 텍스트로 설정하여 표시되지 않도록 처리
+            }
         }
     }
 }

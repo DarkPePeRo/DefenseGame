@@ -7,7 +7,16 @@ using System.Collections;
 
 public class PlayFabLeaderBoard : MonoBehaviour
 {
+    private List<PlayerLeaderboardEntry> cachedLeaderboard = null;
+    private float cacheExpiryTime = 0f;
+    private float cacheDuration = 60f;
+
     public LeaderBoardUI leaderBoardUI;
+    [System.Serializable]
+    private class LeaderboardResponse
+    {
+        public List<PlayerLeaderboardEntry> leaderboard;
+    }
 
     private void Start()
     {
@@ -42,6 +51,33 @@ public class PlayFabLeaderBoard : MonoBehaviour
             MaxResultsCount = 10
         };
         PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardGet, OnLeaderboardGetError);
+    }
+    public void GetUpdatedLeaderboard()
+    {
+        if (cachedLeaderboard != null && Time.time < cacheExpiryTime)
+        {
+            Debug.Log("Using cached leaderboard data.");
+            leaderBoardUI.ShowLeaderboard(cachedLeaderboard);
+        }
+        else
+        {
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+            {
+                FunctionName = "UpdateLeaderboard",
+                GeneratePlayStreamEvent = false
+            },
+            result =>
+            {
+                var leaderboardResponse = JsonUtility.FromJson<LeaderboardResponse>(result.FunctionResult.ToString());
+                cachedLeaderboard = leaderboardResponse.leaderboard;
+                cacheExpiryTime = Time.time + cacheDuration;
+                leaderBoardUI.ShowLeaderboard(cachedLeaderboard);
+            },
+            error =>
+            {
+                Debug.LogError("Failed to execute CloudScript: " + error.GenerateErrorReport());
+            });
+        }
     }
     private void OnLeaderboardGet(GetLeaderboardResult result)
     {

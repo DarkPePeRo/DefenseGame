@@ -160,7 +160,6 @@ public class DemoPlayer : MonoBehaviour
     {
         monsterStat = stat;
         MaxHP = monsterStat.hp * waveSystem.GetHealthMultiplier(); // HP¸¦ ¼³Á¤
-        Debug.Log($"Monster stats set: {monsterStat.name} - HP: {MaxHP}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
     }
     public void ResetHpBar()
     {
