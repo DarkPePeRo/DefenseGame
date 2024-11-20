@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8ac86eb845682441b1d1da6632ffa3b, type: 3}
+  m_Name: CharacterLevelStats
+  m_EditorClassIdentifier: 
+  characterName: archer
+  levelStatsTable:
+  - level: 1
+    attackPower: 10
+    attackSpeed: 1
+    goldRequired: 0
+  - level: 2
+    attackPower: 20
+    attackSpeed: 1.1
+    goldRequired: 1000
+  - level: 3
+    attackPower: 40
+    attackSpeed: 1.2
+    goldRequired: 3000
+  - level: 4
+    attackPower: 60
+    attackSpeed: 1.4
+    goldRequired: 10000
+  - level: 5
+    attackPower: 100
+    attackSpeed: 1.6
+    goldRequired: 100000

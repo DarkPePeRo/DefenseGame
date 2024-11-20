@@ -41,10 +41,9 @@ public class Spawn : MonoBehaviour
                 waveSystem.AgainWave();
                 currentSpawnCount = 0;
             }
-            Timer += Time.deltaTime;
 
             // 일정 간격으로 스폰 및 최대 수 제한 확인
-            if (Timer > spawnDelay && currentSpawnCount < maxSpawnCount)
+            if (currentSpawnCount < maxSpawnCount)
             {
                 GameObject monster = objectPool.GetObject("Skeleton");
 
@@ -59,7 +58,8 @@ public class Spawn : MonoBehaviour
                     Debug.LogWarning("No available objects in pool for 'Skeleton'.");
                 }
             }
-            yield return null;
+            yield return new WaitForSeconds(spawnDelay);
         }
     }
+
 }

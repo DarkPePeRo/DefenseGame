@@ -10,7 +10,6 @@ public class Archer : MonoBehaviour
     public float timer = 0;
     public float shotDelay;
     public Vector3 pos;
-    public List<GameObject> FoundObject;
     public float radius = 0f;
     public LayerMask layer;
     public Collider2D[] colliders;
@@ -19,13 +18,15 @@ public class Archer : MonoBehaviour
 
     void Start()
     {
-
+        objectPool = GameObject.FindObjectOfType<MultiPrefabPool>();
+        if (objectPool == null)
+        {
+            Debug.LogError("MultiPrefabPool not found! Please ensure a PoolManager exists in the scene.");
+        }
     }
-    
-    
+
     void Update()
     {
-        pos = transform.position;
         timer += Time.deltaTime;
         if (timer > shotDelay - 0.1f)
         {
@@ -37,18 +38,7 @@ public class Archer : MonoBehaviour
             {
                 shortEnemy = colliders[colliders.Length - 1];
                 shortEnemyObject = shortEnemy.gameObject;
-                GameObject arrow = objectPool.GetObject("Arrow");
-                //float short_distance = Vector3.Distance(transform.position, colliders[0].transform.position);
-                //foreach (Collider2D col in colliders)
-                //{
-                //    float short_distance2 = Vector3.Distance(transform.position, col.transform.position);
-                //    if (short_distance > short_distance2)
-                //    {
-                //        short_distance = short_distance2;
-                //        shortEnemy = col;
-                //        shortEnemyObject = shortEnemy.gameObject;
-                //    }
-                //}
+                ShootArrow(shortEnemyObject);
                 if (shortEnemyObject.transform.position.x < transform.position.x)
                 {
                     transform.localScale = new Vector3(-0.6f, 0.6f, 1);
@@ -61,10 +51,31 @@ public class Archer : MonoBehaviour
             timer = 0;
         }
     }
-
-    public void FindClosestTarget()
+    private void ShootArrow(GameObject target)
     {
+        if (objectPool == null)
+        {
+            Debug.LogError("Object pool is not initialized. Arrow cannot be spawned.");
+            return;
+        }
 
+        GameObject arrow = objectPool.GetObject("Arrow");
+
+        if (arrow != null)
+        {
+            arrow.transform.position = transform.position;
+
+            ArrowShooting arrowScript = arrow.GetComponent<ArrowShooting>();
+            if (arrowScript != null)
+            {
+                arrowScript.target = target;
+                arrowScript.SetInitialValues(); // 화살 초기화
+            }
+            else
+            {
+                Debug.LogError("ArrowShooting script not found on the arrow object.");
+            }
+        }
     }
 
     private void OnDrawGizmos()

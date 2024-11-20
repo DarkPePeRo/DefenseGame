@@ -17,9 +17,6 @@ public class ArrowShooting : MonoBehaviour
     private Vector3 targetdir;
     private Vector3 previousPosition;
     private MultiPrefabPool objectPool;
-    private Animator bowAnimator = null;
-    public Spawn spawn;
-    public Archer archer;
     public WaveSystem waveSystem;
 
     public float attackDistance = 0.5f;
@@ -28,50 +25,19 @@ public class ArrowShooting : MonoBehaviour
 
     private void Start()
     {
-        objectPool = GameObject.Find("PoolManager")?.GetComponent<MultiPrefabPool>();
-        if (objectPool == null)
-        {
-            Debug.LogError("Object Pool not found! Please assign a PoolManager with MultiPrefabPool component.");
-        }
-        bowAnimator = FindObjectOfType<Bow>()?.GetComponent<Animator>();
-        if (bowAnimator == null)
-        {
-            Debug.LogError("Archer Animator not found! Please assign an Animator component to the Archer.");
-        }
-        archer = FindObjectOfType<Archer>();
-        if (archer == null)
-        {
-            Debug.LogError("Archer not found!");
-        }
         waveSystem = FindObjectOfType<WaveSystem>();
         damageUIManager = FindObjectOfType<DamageUIManager>();
-        spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
+        objectPool = FindObjectOfType<MultiPrefabPool>();
 
         SetRandomDamage(); 
-        bowAnimator.SetBool("isAttack", false);
     }
 
     private void OnEnable()
     {
-        SetInitialValues();
     }
 
-    private void SetInitialValues()
+    public void SetInitialValues()
     {
-        if (archer == null)
-        {
-            archer = FindObjectOfType<Archer>();
-        }
-        if (bowAnimator == null)
-        {
-            bowAnimator = FindObjectOfType<Bow>()?.GetComponent<Animator>();
-        }
-        if (!hasPlayedAnimation)
-        {
-            hasPlayedAnimation = true;
-        }
-        target = archer.shortEnemyObject;
-
         if (target == null)
         {
             Debug.Log("Null Target");
@@ -80,14 +46,12 @@ public class ArrowShooting : MonoBehaviour
 
         if (target.tag == "Enemy")
         {
-            transform.position = archer.transform.position;
             previousPosition = transform.position;
             targetdir = target.GetComponent<DemoPlayer>().dir;
             StartCoroutine(IEFlight());
         }
         if(target.tag == "Boss")
         {
-            transform.position = archer.transform.position;
             previousPosition = transform.position;
             targetdir = target.GetComponent<Boss>().dir;
             StartCoroutine(IEFlight());
@@ -106,7 +70,6 @@ public class ArrowShooting : MonoBehaviour
         while (time < duration)
         {
             time += Time.deltaTime;
-            bowAnimator.SetBool("isAttack", true);
             float linearT = time / duration;
             float heightT = curve.Evaluate(linearT);
             float height = Mathf.Lerp(0.0f, hoverHeight, heightT);
@@ -118,7 +81,6 @@ public class ArrowShooting : MonoBehaviour
 
             yield return null;
         }
-        bowAnimator.SetBool("isAttack", false); 
         if (target != null)
         {
             AttackTargetDirectly();

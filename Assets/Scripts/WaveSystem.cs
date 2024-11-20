@@ -79,6 +79,12 @@ public class WaveSystem : MonoBehaviour
         currentWave--;
         endLine.isEnd = false;
     }
+    public void AgainWaveCharacterChanged() 
+    {
+        pool.ReturnAllObjects();
+        Invoke("StartWave", 2f);
+        spawn.currentSpawnCount = 0;
+    }
     public void OnEnemyDefeated()
     {
         enemyCount--;

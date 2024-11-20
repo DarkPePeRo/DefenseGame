@@ -8,11 +8,17 @@ public class ButtonManager : MonoBehaviour
     private CanvasGroup shopCanvasGroup;
     public GameObject rankingUI;
     private CanvasGroup rankingCanvasGroup;
+    public GameObject characterUI;
+    private CanvasGroup characterCanvasGroup;
+    public GameObject characterDetailUI;
+    private CanvasGroup characterDetailCanvasGroup;
     // Start is called before the first frame update
     void Start()
     {
         shopCanvasGroup = shopUI.GetComponent<CanvasGroup>();
         rankingCanvasGroup = rankingUI.GetComponent<CanvasGroup>();
+        characterCanvasGroup = characterUI.GetComponent<CanvasGroup>();
+        characterDetailCanvasGroup = characterDetailUI.GetComponent<CanvasGroup>();
     }
 
     // Update is called once per frame
@@ -40,6 +46,26 @@ public class ButtonManager : MonoBehaviour
     public void OffRanking()
     {
         StartCoroutine(FadeOutRankingUI());
+    }
+    public void OnCharacter()
+    {
+        Debug.Log("Shop");
+        StartCoroutine(FadeInCharacterUI());
+
+    }
+    public void OffCharacter()
+    {
+        StartCoroutine(FadeOutCharacterUI());
+    }
+    public void OnCharacterDetail()
+    {
+        Debug.Log("Shop");
+        StartCoroutine(FadeInCharacterDetailUI());
+
+    }
+    public void OffCharacterDetail()
+    {
+        StartCoroutine(FadeOutCharacterDetailUI());
     }
 
     private IEnumerator FadeInShopUI()
@@ -108,6 +134,74 @@ public class ButtonManager : MonoBehaviour
             }
 
             rankingUI.SetActive(false); // UI 비활성화
+        }
+    }
+    private IEnumerator FadeInCharacterUI()
+    {
+        if (characterCanvasGroup != null)
+        {
+            characterUI.SetActive(true); // UI 활성화
+            float duration = 0.2f; // 페이드 인 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                characterCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+        }
+    }
+    private IEnumerator FadeOutCharacterUI()
+    {
+        if (characterCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                characterCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            characterUI.SetActive(false); // UI 비활성화
+        }
+    }
+    private IEnumerator FadeInCharacterDetailUI()
+    {
+        if (characterDetailCanvasGroup != null)
+        {
+            characterDetailUI.SetActive(true); // UI 활성화
+            float duration = 0.2f; // 페이드 인 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                characterDetailCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+        }
+    }
+    private IEnumerator FadeOutCharacterDetailUI()
+    {
+        if (characterDetailCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                characterDetailCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            characterDetailUI.SetActive(false); // UI 비활성화
         }
     }
 }

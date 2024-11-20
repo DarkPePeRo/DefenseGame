@@ -149,7 +149,6 @@ public class DemoPlayer : MonoBehaviour
         monsterStat = statsLoader.GetMonsterStatByName(monsterName);
         if (monsterStat != null)
         {
-            Debug.Log($"Initialized Monster: {monsterStat.name} - HP: {MaxHP}, Attack: {monsterStat.attack}, Defense: {monsterStat.defense}");
         }
         else
         {
