@@ -39,6 +39,7 @@ public class WaveSystem : MonoBehaviour
         winCanvasGroup = winUI.GetComponent<CanvasGroup>();
         bossCanvasGroup = bossUI.GetComponent<CanvasGroup>();
         boss = BossPrefab.GetComponent<Boss>();
+        currentWave = PlayFabLogin.Instance.currentWave;
         StartWave();
 
     }
@@ -100,8 +101,9 @@ public class WaveSystem : MonoBehaviour
     {
         int currentScore = currentWave;
         // PlayFabManager를 통해 점수 갱신
-        PlayFabLogin.Instance.UpdateScore(currentWave);
         currentWave++;
+        PlayFabLogin.Instance.UpdateScore(currentWave);
+        PlayFabLogin.Instance.AddClearedStage(currentWave);
         spawn.currentSpawnCount = 0;
         bossHPUI.SetActive(false);
         StartCoroutine(FadeInWinUI()); 

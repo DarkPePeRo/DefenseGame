@@ -10,7 +10,10 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+            DontDestroyOnLoad(gameObject); // 오브젝트 유지
+        }
         else
             Destroy(gameObject);
     }
@@ -97,4 +100,40 @@ public class GameManager : MonoBehaviour
             Debug.Log($"위치: {kvp.Key}, 캐릭터: {kvp.Value?.name}");
         }
     }
+    public Dictionary<Vector2, GameObject> GetPlacedCharacters()
+    {
+        return placedCharacters;
+    }
+    public void ClearPlacedCharacters()
+    {
+        if (placedCharacters.Count == 0)
+        {
+            Debug.Log("placedCharacters가 이미 비어 있습니다.");
+            return;
+        }
+
+        // 딕셔너리를 복사하여 안전하게 순회
+        var charactersToClear = new List<KeyValuePair<Vector2, GameObject>>(placedCharacters);
+
+        foreach (var kvp in charactersToClear)
+        {
+            if (kvp.Value != null)
+            {
+                Debug.Log($"Destroying GameObject at position: {kvp.Key}, Name: {kvp.Value.name}");
+                Destroy(kvp.Value);
+            }
+            else
+            {
+                Debug.LogWarning($"Null GameObject found at position: {kvp.Key}");
+            }
+        }
+
+        placedCharacters.Clear();
+        Debug.Log("placedCharacters 초기화 완료");
+
+        // 필요 시 메모리 정리 호출
+        Resources.UnloadUnusedAssets();
+    }
+
+
 }
