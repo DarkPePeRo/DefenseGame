@@ -1,74 +1,41 @@
-using Photon.Chat;
-using Photon.Pun;
-using Photon.Realtime;
-using TMPro;
+using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
+using NativeWebSocket;
+using TMPro;
 
-public class ChatManager : MonoBehaviour, IChatClientListener
+public class ChatManager : MonoBehaviour
 {
     public TMP_InputField chatInputField;
-    public TextMeshProUGUI chatDisplayText;
-    private ChatClient chatClient;
-    private string userName;
+    public Button sendButton;
+    public Transform chatContent; // 채팅 메시지를 추가할 Content
+    public GameObject chatMessagePrefab; // 채팅 메시지 프리팹
 
-    private void Start()
+    private WebSocket websocket;
+
+    void Start()
     {
-        // userName을 Start 메서드에서 초기화
-        userName = "User_" + Random.Range(1000, 9999);
-
-        // ChatClient 인스턴스 생성 및 연결
-        chatClient = new ChatClient(this);
-        chatClient.Connect(PhotonNetwork.PhotonServerSettings.AppSettings.AppIdChat, PhotonNetwork.AppVersion, new Photon.Chat.AuthenticationValues(userName));
+        websocket = PlayFabLogin.Instance.GetWebSocket();
+        sendButton.onClick.AddListener(SendChatMessage);
     }
 
-    private void Update()
+    public async void SendChatMessage()
     {
-        chatClient?.Service();
-    }
-
-    public void SendMessageToChat()
-    {
-        string message = chatInputField.text;
-        if (!string.IsNullOrEmpty(message))
+        if (websocket != null && websocket.State == WebSocketState.Open && !string.IsNullOrWhiteSpace(chatInputField.text))
         {
-            chatClient.PublishMessage("GlobalChannel", message);
-            chatInputField.text = "";
+            string message = $"{PlayFabLogin.Instance.GetUserDisplayName()}: {chatInputField.text}";
+            await websocket.SendText(message);
+            chatInputField.text = ""; // 입력 필드 초기화
+        }
+        else
+        {
+            Debug.LogError("WebSocket이 연결되지 않았거나, 메시지가 비어 있습니다.");
         }
     }
-
-    public void OnConnected()
+    public void AppendChatMessage(string message)
     {
-        Debug.Log("Chat 서버에 연결되었습니다.");
-        chatClient.Subscribe(new string[] { "GlobalChannel" });
-    }
-
-    public void OnDisconnected()
-    {
-        Debug.Log("Chat 서버에서 연결이 끊겼습니다.");
-    }
-
-    public void OnChatStateChange(ChatState state) { }
-    public void OnGetMessages(string channelName, string[] senders, object[] messages)
-    {
-        for (int i = 0; i < messages.Length; i++)
-        {
-            chatDisplayText.text += $"\n{senders[i]}: {messages[i]}";
-        }
-    }
-
-    public void OnPrivateMessage(string sender, object message, string channelName) { }
-    public void OnSubscribed(string[] channels, bool[] results)
-    {
-        Debug.Log("채널에 구독되었습니다.");
-    }
-
-    public void OnUnsubscribed(string[] channels) { }
-    public void OnStatusUpdate(string user, int status, bool gotMessage, object message) { }
-    public void OnUserSubscribed(string channel, string user) { }
-    public void OnUserUnsubscribed(string channel, string user) { }
-
-    public void DebugReturn(ExitGames.Client.Photon.DebugLevel level, string message)
-    {
-        Debug.Log($"[Photon Chat Debug] Level: {level}, Message: {message}");
+        GameObject newMessage = Instantiate(chatMessagePrefab, chatContent); // 프리팹 인스턴스 생성
+        TMP_Text messageText = newMessage.GetComponent<TMP_Text>(); // TextMeshPro 컴포넌트 가져오기
+        messageText.text = message;
     }
 }

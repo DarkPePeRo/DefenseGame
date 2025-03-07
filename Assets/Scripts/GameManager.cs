@@ -12,12 +12,14 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 오브젝트 유지
         }
         else
             Destroy(gameObject);
     }
-
+    public void Start()
+    {
+        PlayFabLogin.Instance.LoadPlacedCharactersFromPlayFab();
+    }
     public void PlaceCharacter(Vector2 position, GameObject character)
     {
         if (character == null)

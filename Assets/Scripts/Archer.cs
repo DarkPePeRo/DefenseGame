@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class Archer : MonoBehaviour
 {
@@ -15,6 +17,8 @@ public class Archer : MonoBehaviour
     public Collider2D[] colliders;
     public Collider2D shortEnemy;
     public GameObject shortEnemyObject;
+
+    public Character character;
 
     void Start()
     {
@@ -70,6 +74,7 @@ public class Archer : MonoBehaviour
             {
                 arrowScript.target = target;
                 arrowScript.SetInitialValues(); // 화살 초기화
+                arrowScript.baseDamage = character.GetCurrentAttackPower();
             }
             else
             {

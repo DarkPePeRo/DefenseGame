@@ -5,7 +5,7 @@ using TMPro;
 
 public class DamageUIManager : MonoBehaviour
 {
-    [SerializeField] private GameObject damageTextPrefab; // 데미지 텍스트 프리팹
+    [SerializeField] public GameObject damageTextPrefab; // 데미지 텍스트 프리팹
 
     public void ShowDamageText(Vector3 position, float damageAmount)
     {

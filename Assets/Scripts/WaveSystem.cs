@@ -30,7 +30,6 @@ public class WaveSystem : MonoBehaviour
 
     public float[] healthMultipliers; // 웨이브에 따른 체력 배수
     public int[] goldRewards;         // 웨이브에 따른 골드 보상
-    public float[] arrowDamageMultipliers; // 웨이브에 따른 데이지 배수
 
     public EndLine endLine;
     void Start()
@@ -57,7 +56,7 @@ public class WaveSystem : MonoBehaviour
         }
     }
 
-    void StartWave()
+    public void StartWave()
     {
         pool.ReturnAllObjects();
         enemyCountPerWave = requiredEnemies + (currentWave - 1) * 5; // 웨이브마다 적 수 증가
@@ -75,6 +74,7 @@ public class WaveSystem : MonoBehaviour
         Debug.Log("Again");
         pool.ReturnAllObjects();
         StartCoroutine(FadeInDefeatedUI());
+        spawn.StopCoroutine("SpawnEnemy");
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
         currentWave--;
@@ -82,6 +82,7 @@ public class WaveSystem : MonoBehaviour
     }
     public void AgainWaveCharacterChanged() 
     {
+        spawn.StopCoroutine("SpawnEnemy");
         pool.ReturnAllObjects();
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
@@ -132,12 +133,6 @@ public class WaveSystem : MonoBehaviour
         if (currentWave - 1 < goldRewards.Length)
             return goldRewards[currentWave - 1];
         return 100;
-    }
-    public float GetArrowDamageMultiplier()
-    {
-        if (currentWave - 1 < arrowDamageMultipliers.Length)
-            return arrowDamageMultipliers[currentWave - 1];
-        return 1.0f;
     }
     private IEnumerator FadeInDefeatedUI()
     {

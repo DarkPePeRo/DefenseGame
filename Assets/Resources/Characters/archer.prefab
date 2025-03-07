@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 7327141321166453739}
   m_Layer: 0
   m_Name: archer
-  m_TagString: Untagged
+  m_TagString: archer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -223,15 +223,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectPool: {fileID: 0}
   timer: 0
-  shotDelay: 0.15
+  shotDelay: 0.5
   pos: {x: 0, y: 0, z: 0}
-  radius: 3.5
+  radius: 3
   layer:
     serializedVersion: 2
     m_Bits: 64
   colliders: []
   shortEnemy: {fileID: 0}
   shortEnemyObject: {fileID: 0}
+  character: {fileID: 7327141321166453739}
 --- !u!114 &7327141321166453739
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,4 +245,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cd20681a5a2d3c4a9b4b7e9460b44dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelStats: {fileID: 11400000, guid: 855c140d3d935d7459135aff402bba37, type: 2}
+  currentLevel: 1
+  currentAttackPower: 0
+  currentAttackSpeed: 0
+  needGold: 0
+  timer: 0
+  characterManager: {fileID: 0}

@@ -1,24 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
+using TMPro;
 
 public class ButtonManager : MonoBehaviour
 {
+    public CharacterManager characterManager;
     public GameObject shopUI;
     private CanvasGroup shopCanvasGroup;
     public GameObject rankingUI;
     private CanvasGroup rankingCanvasGroup;
     public GameObject characterUI;
     private CanvasGroup characterCanvasGroup;
-    public GameObject characterDetailUI;
-    private CanvasGroup characterDetailCanvasGroup;
+    public GameObject godUI;
+    private CanvasGroup godCanvasGroup;
+
     // Start is called before the first frame update
     void Start()
     {
         shopCanvasGroup = shopUI.GetComponent<CanvasGroup>();
         rankingCanvasGroup = rankingUI.GetComponent<CanvasGroup>();
         characterCanvasGroup = characterUI.GetComponent<CanvasGroup>();
-        characterDetailCanvasGroup = characterDetailUI.GetComponent<CanvasGroup>();
+        godCanvasGroup = godUI.GetComponent<CanvasGroup>();
     }
 
     // Update is called once per frame
@@ -57,15 +61,15 @@ public class ButtonManager : MonoBehaviour
     {
         StartCoroutine(FadeOutCharacterUI());
     }
-    public void OnCharacterDetail()
+    public void OnGod()
     {
         Debug.Log("Shop");
-        StartCoroutine(FadeInCharacterDetailUI());
+        StartCoroutine(FadeInGodUI());
 
     }
-    public void OffCharacterDetail()
+    public void OffGod()
     {
-        StartCoroutine(FadeOutCharacterDetailUI());
+        StartCoroutine(FadeOutGodUI());
     }
 
     private IEnumerator FadeInShopUI()
@@ -170,26 +174,26 @@ public class ButtonManager : MonoBehaviour
             characterUI.SetActive(false); // UI 비활성화
         }
     }
-    private IEnumerator FadeInCharacterDetailUI()
+    private IEnumerator FadeInGodUI()
     {
-        if (characterDetailCanvasGroup != null)
+        if (godCanvasGroup != null)
         {
-            characterDetailUI.SetActive(true); // UI 활성화
+            godUI.SetActive(true); // UI 활성화
             float duration = 0.2f; // 페이드 인 지속 시간
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                characterDetailCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
+                godCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
 
         }
     }
-    private IEnumerator FadeOutCharacterDetailUI()
+    private IEnumerator FadeOutGodUI()
     {
-        if (characterDetailCanvasGroup != null)
+        if (godCanvasGroup != null)
         {
             float duration = 0.2f; // 페이드 아웃 지속 시간
             float elapsed = 0f;
@@ -197,11 +201,11 @@ public class ButtonManager : MonoBehaviour
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                characterDetailCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                godCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
 
-            characterDetailUI.SetActive(false); // UI 비활성화
+            godUI.SetActive(false); // UI 비활성화
         }
     }
 }

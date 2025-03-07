@@ -1,0 +1,17 @@
+{
+  "levels": [
+    { "level": 1, "attackPower": 10, "attackSpeed": 1.0, "goldRequired": 100 },
+    { "level": 2, "attackPower": 15, "attackSpeed": 1.2, "goldRequired": 200 },
+    { "level": 3, "attackPower": 20, "attackSpeed": 1.5, "goldRequired": 300 },
+    { "level": 4, "attackPower": 30, "attackSpeed": 1.5, "goldRequired": 400 },
+    { "level": 5, "attackPower": 40, "attackSpeed": 1.5, "goldRequired": 500 },
+    { "level": 6, "attackPower": 50, "attackSpeed": 1.5, "goldRequired": 600 },
+    { "level": 7, "attackPower": 60, "attackSpeed": 1.5, "goldRequired": 700 },
+    { "level": 8, "attackPower": 70, "attackSpeed": 1.5, "goldRequired": 800 },
+    { "level": 9, "attackPower": 80, "attackSpeed": 1.5, "goldRequired": 900 },
+    { "level": 10, "attackPower": 90, "attackSpeed": 1.5, "goldRequired": 1000 },
+    { "level": 11, "attackPower": 100, "attackSpeed": 1.5, "goldRequired": 1100 },
+    { "level": 12, "attackPower": 110, "attackSpeed": 1.5, "goldRequired": 1200 },
+    { "level": 13, "attackPower": 120, "attackSpeed": 1.5, "goldRequired": 1300 }
+  ]
+}

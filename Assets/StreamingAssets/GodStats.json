@@ -1,0 +1,50 @@
+{
+  "attackPowerLevels": [
+    { "level": 1, "value": 10, "goldRequired": 100 },
+    { "level": 2, "value": 20, "goldRequired": 200 },
+    { "level": 3, "value": 30, "goldRequired": 300 },
+    { "level": 4, "value": 40, "goldRequired": 400 },
+    { "level": 5, "value": 50, "goldRequired": 500 },
+    { "level": 6, "value": 60, "goldRequired": 600 },
+    { "level": 7, "value": 70, "goldRequired": 700 },
+    { "level": 8, "value": 80, "goldRequired": 800 },
+    { "level": 9, "value": 90, "goldRequired": 900 },
+    { "level": 10, "value": 100, "goldRequired": 1000 }
+  ],
+  "attackSpeedLevels": [
+    { "level": 1, "value": 10, "goldRequired": 100 },
+    { "level": 2, "value": 20, "goldRequired": 200 },
+    { "level": 3, "value": 30, "goldRequired": 300 },
+    { "level": 4, "value": 40, "goldRequired": 400 },
+    { "level": 5, "value": 50, "goldRequired": 500 },
+    { "level": 6, "value": 60, "goldRequired": 600 },
+    { "level": 7, "value": 70, "goldRequired": 700 },
+    { "level": 8, "value": 80, "goldRequired": 800 },
+    { "level": 9, "value": 90, "goldRequired": 900 },
+    { "level": 10, "value": 100, "goldRequired": 1000 }
+  ],
+  "criticalRateLevels": [
+    { "level": 1, "value": 10, "goldRequired": 100 },
+    { "level": 2, "value": 20, "goldRequired": 200 },
+    { "level": 3, "value": 30, "goldRequired": 300 },
+    { "level": 4, "value": 40, "goldRequired": 400 },
+    { "level": 5, "value": 50, "goldRequired": 500 },
+    { "level": 6, "value": 60, "goldRequired": 600 },
+    { "level": 7, "value": 70, "goldRequired": 700 },
+    { "level": 8, "value": 80, "goldRequired": 800 },
+    { "level": 9, "value": 90, "goldRequired": 900 },
+    { "level": 10, "value": 100, "goldRequired": 1000 }
+  ],
+  "criticalDamageLevels": [
+    { "level": 1, "value": 10, "goldRequired": 100 },
+    { "level": 2, "value": 20, "goldRequired": 200 },
+    { "level": 3, "value": 30, "goldRequired": 300 },
+    { "level": 4, "value": 40, "goldRequired": 400 },
+    { "level": 5, "value": 50, "goldRequired": 500 },
+    { "level": 6, "value": 60, "goldRequired": 600 },
+    { "level": 7, "value": 70, "goldRequired": 700 },
+    { "level": 8, "value": 80, "goldRequired": 800 },
+    { "level": 9, "value": 90, "goldRequired": 900 },
+    { "level": 10, "value": 100, "goldRequired": 1000 }
+  ]
+}

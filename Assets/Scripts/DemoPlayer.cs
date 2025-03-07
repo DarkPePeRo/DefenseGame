@@ -31,7 +31,7 @@ public class DemoPlayer : MonoBehaviour
     public Vector3 dir;
     public Vector3 normalizedDir;
     private Transform target;
-    private int wavepointIndex = 0; //maximum 5
+    private int wavepointIndex = 0;
     private void Awake()
     {
         objectPool = GameObject.Find("PoolManager")?.GetComponent<MultiPrefabPool>();

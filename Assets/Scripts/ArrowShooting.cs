@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using System.Runtime.CompilerServices;
 
 public class ArrowShooting : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class ArrowShooting : MonoBehaviour
 
     public float baseDamage;
     public int damage;
+    public bool isCritical;
 
     public GameObject target;
     private Vector3 targetdir;
@@ -137,9 +139,20 @@ public class ArrowShooting : MonoBehaviour
     }
     private void SetRandomDamage()
     {
-        int minDamage = Mathf.FloorToInt(baseDamage * 0.9f * waveSystem.GetArrowDamageMultiplier()); // 최소 10% 감소
-        int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f * waveSystem.GetArrowDamageMultiplier()); // 최대 10% 증가
+        isCritical = false;
+        int minDamage = Mathf.FloorToInt(baseDamage * 0.9f); // 최소 10% 감소
+        int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f); // 최대 10% 증가
         damage = Random.Range(minDamage, maxDamage + 1); // 정수형 랜덤 데미지
+
+        float criticalChance = 0.3f; // 5% 확률
+        if (Random.value < criticalChance) // Random.value는 0.0 ~ 1.0 사이의 값 반환
+        {
+            isCritical = true;
+            int minCriticalDamage = Mathf.FloorToInt(damage * 2.5f); // 치명타: 데미지 250%~300% 증가
+            int maxCriticalDamage = Mathf.FloorToInt(damage * 3f);
+            damage = Random.Range(minCriticalDamage, maxCriticalDamage);
+            Debug.Log("Critical Hit! Damage: " + damage);
+        }
     }
     private void AttackTargetDirectly()
     {
@@ -157,7 +170,12 @@ public class ArrowShooting : MonoBehaviour
                 if (targetPlayer.CurrentHP > 0)
                 {
                     targetPlayer.CurrentHP -= damage;
+                    if (isCritical == true)
+                    {
+                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
+                    }
                     damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
+                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
                     Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
@@ -170,10 +188,17 @@ public class ArrowShooting : MonoBehaviour
                 if (targetPlayer.CurrentHP > 0)
                 {
                     targetPlayer.CurrentHP -= damage;
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.5f, 0), damage);
+                    if (isCritical == true)
+                    {
+                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
+                    }
+                    damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.7f, 0), damage);
+                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
                     Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
         }
     }
+
+
 }

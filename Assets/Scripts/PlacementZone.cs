@@ -76,6 +76,8 @@ public class PlacementZone : MonoBehaviour
             }
 
             GameObject characterToRemove = GameManager.Instance.GetPlacedCharacter(position);
+            Character character = characterToRemove.GetComponent<Character>();
+            CharacterManager.Instance.characters.Remove(character);
             GameManager.Instance.PlaceCharacter(position, null);
             Destroy(characterToRemove);
             Debug.Log($"다른 구역에서 캐릭터 제거됨: {position}");
@@ -85,6 +87,9 @@ public class PlacementZone : MonoBehaviour
     private void PlaceNewCharacter(GameObject selectedCharacterPrefab)
     {
         GameObject newCharacter = Instantiate(selectedCharacterPrefab, transform.position, Quaternion.identity);
+        newCharacter.name = selectedCharacterPrefab.name;
+        Character character = newCharacter.GetComponent<Character>();
+        CharacterManager.Instance.characters.Add(character);
         currentCharacter = newCharacter;
 
         // GameManager에 새로운 캐릭터 기록

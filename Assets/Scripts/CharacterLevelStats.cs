@@ -1,17 +1,16 @@
-using UnityEngine;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class LevelStats
 {
-    public int level;              // 레벨
-    public float attackPower;      // 공격력
-    public float attackSpeed;      // 공격 속도
-    public int goldRequired;       // 레벨업에 필요한 골드
+    public int level;
+    public float attackPower;
+    public float attackSpeed;
+    public int goldRequired;
 }
 
-[CreateAssetMenu(fileName = "CharacterLevelStats", menuName = "Game/CharacterLevelStats", order = 1)]
-public class CharacterLevelStats : ScriptableObject
+[System.Serializable]
+public class CharacterStats
 {
-    public string characterName;          // 캐릭터 이름
-    public LevelStats[] levelStatsTable;  // 레벨별 능력치 테이블
+    public List<LevelStats> levels;
 }

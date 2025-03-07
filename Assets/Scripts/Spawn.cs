@@ -7,7 +7,7 @@ public class Spawn : MonoBehaviour
     public MultiPrefabPool objectPool;
     public float Timer;
     public float spawnDelay;
-    public int maxSpawnCount = 100; // 최대 스폰 수 제한
+    public int maxSpawnCount = 200; // 최대 스폰 수 제한
     public int currentSpawnCount = 0;
     public WaveSystem waveSystem;
     public EndLine endLine;
@@ -31,34 +31,41 @@ public class Spawn : MonoBehaviour
         currentSpawnCount--;
         if (currentSpawnCount < 0) currentSpawnCount = 0; // 음수 방지
     }
-
     public IEnumerator SpawnEnemy()
     {
-        while(currentSpawnCount < waveSystem.enemyCountPerWave)
+        float nextSpawnTime = Time.time; // 다음 스폰 시간
+
+        while (currentSpawnCount < waveSystem.enemyCountPerWave)
         {
-            if(endLine.isEnd == true)
+            if (endLine.isEnd)
             {
                 waveSystem.AgainWave();
                 currentSpawnCount = 0;
+                yield break; // 새 웨이브를 시작하기 위해 코루틴 종료
             }
 
-            // 일정 간격으로 스폰 및 최대 수 제한 확인
-            if (currentSpawnCount < maxSpawnCount)
+
+            if (Time.time >= nextSpawnTime) // 스폰 간격 확인
             {
-                GameObject monster = objectPool.GetObject("Skeleton");
+                if (currentSpawnCount < maxSpawnCount)
+                {
+                    GameObject monster = objectPool.GetObject("Skeleton");
 
-                if (monster != null) // 오브젝트가 풀에서 정상적으로 반환된 경우만 진행
-                {
-                    monster.transform.position = transform.position;
-                    Timer = 0;
-                    currentSpawnCount++; // 현재 스폰된 수 증가
+                    if (monster != null)
+                    {
+                        monster.transform.position = transform.position;
+                        currentSpawnCount++;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No available objects in pool for 'Skeleton'.");
+                    }
                 }
-                else
-                {
-                    Debug.LogWarning("No available objects in pool for 'Skeleton'.");
-                }
+                // 다음 스폰 시간 갱신
+                nextSpawnTime = Time.time + spawnDelay;
             }
-            yield return new WaitForSeconds(spawnDelay);
+
+            yield return null; // 매 프레임 코루틴 지속
         }
     }
 

@@ -17,6 +17,8 @@ public class God : MonoBehaviour
     public Collider2D shortEnemy;
     public GameObject shortEnemyObject;
 
+    public GameObject godDetailUI;
+
     void Start()
     {
 
@@ -71,5 +73,10 @@ public class God : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, radius);
+    }
+
+    private void OnMouseDown()
+    {
+        
     }
 }
