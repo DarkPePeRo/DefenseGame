@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class Archer : MonoBehaviour
@@ -51,6 +50,10 @@ public class Archer : MonoBehaviour
                 {
                     transform.localScale = new Vector3(0.6f, 0.6f, 1);
                 }
+            }
+            else
+            {
+                shortEnemy = null;
             }
             timer = 0;
         }

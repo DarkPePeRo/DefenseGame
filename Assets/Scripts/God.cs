@@ -17,6 +17,9 @@ public class God : MonoBehaviour
     public Collider2D shortEnemy;
     public GameObject shortEnemyObject;
 
+    public float width;
+    public float height;
+
     public GameObject godDetailUI;
 
     void Start()
@@ -31,7 +34,10 @@ public class God : MonoBehaviour
         timer += Time.deltaTime;
         if (timer > shotDelay - 0.1f)
         {
-            colliders = Physics2D.OverlapCircleAll(transform.position, radius, layer);
+            colliders = Physics2D.OverlapAreaAll(
+            new Vector2(transform.position.x - width / 2, transform.position.y - height / 2),
+            new Vector2(transform.position.x + width / 2, transform.position.y + height / 2),
+            layer);
         }
         if (timer > shotDelay)
         {
@@ -71,8 +77,20 @@ public class God : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        // 사각형의 네 꼭짓점 계산
+        Vector2 bottomLeft = new Vector2(transform.position.x - width / 2, transform.position.y - height / 2);
+        Vector2 bottomRight = new Vector2(transform.position.x + width / 2, transform.position.y - height / 2);
+        Vector2 topLeft = new Vector2(transform.position.x - width / 2, transform.position.y + height / 2);
+        Vector2 topRight = new Vector2(transform.position.x + width / 2, transform.position.y + height / 2);
+
+        // 기즈모 색상 설정
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, radius);
+
+        // 사각형 그리기 (네 변을 선으로 연결)
+        Gizmos.DrawLine(bottomLeft, bottomRight);
+        Gizmos.DrawLine(bottomRight, topRight);
+        Gizmos.DrawLine(topRight, topLeft);
+        Gizmos.DrawLine(topLeft, bottomLeft);
     }
 
     private void OnMouseDown()

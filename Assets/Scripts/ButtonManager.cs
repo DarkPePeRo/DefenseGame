@@ -15,6 +15,8 @@ public class ButtonManager : MonoBehaviour
     private CanvasGroup characterCanvasGroup;
     public GameObject godUI;
     private CanvasGroup godCanvasGroup;
+    public GameObject towerUI;
+    private CanvasGroup towerCanvasGroup;
 
     // Start is called before the first frame update
     void Start()
@@ -23,6 +25,7 @@ public class ButtonManager : MonoBehaviour
         rankingCanvasGroup = rankingUI.GetComponent<CanvasGroup>();
         characterCanvasGroup = characterUI.GetComponent<CanvasGroup>();
         godCanvasGroup = godUI.GetComponent<CanvasGroup>();
+        towerCanvasGroup = towerUI.GetComponent<CanvasGroup>();
     }
 
     // Update is called once per frame
@@ -70,6 +73,16 @@ public class ButtonManager : MonoBehaviour
     public void OffGod()
     {
         StartCoroutine(FadeOutGodUI());
+    }
+    public void OnTower()
+    {
+        Debug.Log("Shop");
+        StartCoroutine(FadeInTowerUI());
+
+    }
+    public void OffTower()
+    {
+        StartCoroutine(FadeOutTowerUI());
     }
 
     private IEnumerator FadeInShopUI()
@@ -206,6 +219,40 @@ public class ButtonManager : MonoBehaviour
             }
 
             godUI.SetActive(false); // UI 비활성화
+        }
+    }
+    private IEnumerator FadeInTowerUI()
+    {
+        if (towerCanvasGroup != null)
+        {
+            towerUI.SetActive(true); // UI 활성화
+            float duration = 0.2f; // 페이드 인 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                towerCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+        }
+    }
+    private IEnumerator FadeOutTowerUI()
+    {
+        if (towerCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                towerCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            towerUI.SetActive(false); // UI 비활성화
         }
     }
 }

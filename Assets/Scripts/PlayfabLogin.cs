@@ -5,6 +5,7 @@ using System;
 using System.Text;
 using UnityEngine;
 using NativeWebSocket;
+using PimDeWitte.UnityMainThreadDispatcher;
 
 public class PlayFabLogin : MonoBehaviour
 {
@@ -99,6 +100,7 @@ public class PlayFabLogin : MonoBehaviour
         });
         // 스텟 로드
         LoadStatsFromPlayFab();
+        FetchDisplayName();
     }
 
 
@@ -120,15 +122,6 @@ public class PlayFabLogin : MonoBehaviour
     }
 
 
-    public async void SendMessage(string message)
-    {
-        if (websocket.State == WebSocketState.Open)
-        {
-            string formattedMessage = $"{playFabId}: {message}";
-            await websocket.SendText(formattedMessage);
-        }
-    }
-
     async void OnApplicationQuit()
     {
         await websocket.Close();
@@ -143,6 +136,14 @@ public class PlayFabLogin : MonoBehaviour
             if (string.IsNullOrEmpty(displayName))
             {
                 displayName = "User_" + playFabId.Substring(0, 5);
+            }
+            if (result.AccountInfo != null && result.AccountInfo.TitleInfo != null)
+            {
+                Debug.Log("PlayFab 유저 정보 확인: " + JsonUtility.ToJson(result.AccountInfo));
+            }
+            else
+            {
+                Debug.LogError("PlayFab 유저 정보 가져오기 실패: AccountInfo가 null임");
             }
         }, error => Debug.LogError("DisplayName 가져오기 실패: " + error.GenerateErrorReport()));
     }
@@ -160,14 +161,19 @@ public class PlayFabLogin : MonoBehaviour
         websocket.OnMessage += (bytes) =>
         {
             string message = Encoding.UTF8.GetString(bytes);
-            Debug.LogError("받은 메시지: " + message);
+            Debug.Log($"WebSocket에서 받은 메시지: {message}");
 
-            // ChatManager의 AppendChatMessage를 호출하여 UI에 메시지를 추가
-            FindObjectOfType<ChatManager>().AppendChatMessage(message);
+            // UI 업데이트 요청
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                Debug.Log("메인 스레드에서 AppendChatMessage 실행");
+                FindObjectOfType<ChatManager>()?.AppendChatMessage(message);
+            });
         };
 
         await websocket.Connect();
     }
+
 
     public WebSocket GetWebSocket()
     {
@@ -473,7 +479,16 @@ public class PlayFabLogin : MonoBehaviour
 
         return prefab;
     }
-
+    public void SetCurrentLevel(string statType, int newLevel)
+    {
+        switch (statType)
+        {
+            case "attackPower": attackPowerLevel = newLevel; break;
+            case "attackSpeed": attackSpeedLevel = newLevel; break;
+            case "criticalRate": criticalRateLevel = newLevel; break;
+            case "criticalDamage": criticalDamageLevel = newLevel; break;
+        }
+    }
     public void SaveStatsToPlayFab()
     {
         var data = new Dictionary<string, string>

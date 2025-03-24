@@ -26,17 +26,6 @@ public class Character : MonoBehaviour
         characterManager = GameObject.Find("CharacterManager").GetComponent<CharacterManager>();
     }
 
-    private void Update()
-    {
-        timer += Time.deltaTime;
-        if (timer > 5)
-        {
-            Debug.Log($"타이머: {timer}");
-            Debug.Log($"현재 공격력: {currentAttackPower}");
-            Debug.Log($"현재 레벨: {currentLevel}");
-            timer = 0;
-        }
-    }
 
     private void LoadCharacterStats()
     {

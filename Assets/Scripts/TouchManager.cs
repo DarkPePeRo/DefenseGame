@@ -135,33 +135,33 @@ public class TouchManager : MonoBehaviour
     private void UpdateCameraPosition()
     {
         // 이동 수치가 없으면 아무것도 안함
-        Vector2 worldpoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        RaycastHit2D hit = Physics2D.Raycast(worldpoint, Vector2.zero);
+        //Vector2 worldpoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //RaycastHit2D hit = Physics2D.Raycast(worldpoint, Vector2.zero);
 
-        if (Input.GetMouseButtonUp(0) && hit.collider != null && _directionForce == Vector3.zero)
-        {
-            Debug.Log(hit.collider.name);
-            Debug.Log(hit.collider.transform.position);
-            target = new Vector3(hit.collider.transform.position.x, hit.collider.transform.position.y + 0.5f, -10);
-            isActive = true;
-            isActiveZoom = true;
-        }
-        if (isActive)
-        {
-            this.transform.position = Vector3.Lerp(this.transform.position, target, Time.deltaTime * 4);
-            if (Vector3.Distance(this.transform.position, target) < 0.2f)
-            {
-                isActive = false;
-            }
-        }
-        if (isActiveZoom)
-        {
-            GetComponent<Camera>().orthographicSize = Mathf.Lerp(GetComponent<Camera>().orthographicSize, 2.5f, Time.deltaTime * 5);
-            if (GetComponent<Camera>().orthographicSize < 2.6f)
-            {
-                isActiveZoom = false;
-            }
-        }
+        //if (Input.GetMouseButtonUp(0) && hit.collider != null && _directionForce == Vector3.zero)
+        //{
+        //    Debug.Log(hit.collider.name);
+        //    Debug.Log(hit.collider.transform.position);
+        //    target = new Vector3(hit.collider.transform.position.x, hit.collider.transform.position.y + 0.5f, -10);
+        //    isActive = true;
+        //    isActiveZoom = true;
+        //}
+        //if (isActive)
+        //{
+        //    this.transform.position = Vector3.Lerp(this.transform.position, target, Time.deltaTime * 4);
+        //    if (Vector3.Distance(this.transform.position, target) < 0.2f)
+        //    {
+        //        isActive = false;
+        //    }
+        //}
+        //if (isActiveZoom)
+        //{
+        //    GetComponent<Camera>().orthographicSize = Mathf.Lerp(GetComponent<Camera>().orthographicSize, 2.5f, Time.deltaTime * 5);
+        //    if (GetComponent<Camera>().orthographicSize < 2.6f)
+        //    {
+        //        isActiveZoom = false;
+        //    }
+        //}
         // 카메라의 orthographicSize와 종횡비에 따른 가시 범위 계산
         Camera cam = GetComponent<Camera>();
         float cameraHeight = cam.orthographicSize * 2;

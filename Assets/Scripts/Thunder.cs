@@ -22,6 +22,8 @@ public class Thunder : MonoBehaviour
     private MultiPrefabPool objectPool;
     public Spawn spawn;
     public WaveSystem waveSystem;
+
+    public GodStatManage godStatManage;
     void Start()
     {
         objectPool = GameObject.Find("PoolManager")?.GetComponent<MultiPrefabPool>();
@@ -33,6 +35,8 @@ public class Thunder : MonoBehaviour
         damageUIManager = FindObjectOfType<DamageUIManager>();
         spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
         god = FindObjectOfType<God>();
+        godStatManage = FindObjectOfType<GodStatManage>();
+        baseDamage = godStatManage.attackPower;
 
         SetRandomDamage();
         sprite = GetComponent<SpriteRenderer>();
@@ -54,7 +58,10 @@ public class Thunder : MonoBehaviour
             god = FindObjectOfType<God>();
         }
         target = god.shortEnemyObject;
-
+        if(godStatManage != null)
+        {
+            baseDamage = godStatManage.attackPower;
+        }
         if (target == null)
         {
             Debug.Log("Null Target");
@@ -125,7 +132,6 @@ public class Thunder : MonoBehaviour
                 {
                     targetPlayer.CurrentHP -= damage;
                     damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
         }
@@ -138,7 +144,6 @@ public class Thunder : MonoBehaviour
                 {
                     targetPlayer.CurrentHP -= damage;
                     damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.5f, 0), damage);
-                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
         }

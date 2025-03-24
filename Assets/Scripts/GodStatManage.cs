@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using TMPro;
+using Unity.Collections.LowLevel.Unsafe;
 
 public class GodStatManage : MonoBehaviour
 {
@@ -34,12 +35,13 @@ public class GodStatManage : MonoBehaviour
     {
         LoadGodStats(); // JSON 파일에서 데이터 로드
         PlayFabLogin.Instance.LoadStatsFromPlayFab();
+        attackPowerLevel = PlayFabLogin.Instance.attackPowerLevel;
+        GetCurrentValue("attackPower");
         if (godStatsData == null)
         {
             Debug.LogError("GodStats가 로드되지 않았습니다! JSON 파일을 확인하세요.");
             return;
         }
-        //InitializeCharacter();
 
     }
     private void LoadGodStats()
@@ -74,7 +76,6 @@ public class GodStatManage : MonoBehaviour
     }
     public void LevelUp(string statType)
     {
-        Debug.LogError(godStatsData);
         int currentLevel = GetCurrentLevel(statType);
         List<GodStatLevel> statLevels = GetStatLevels(statType);
         if (statLevels == null || currentLevel >= statLevels.Count)
@@ -96,6 +97,7 @@ public class GodStatManage : MonoBehaviour
             SetCurrentLevel(statType, nextLevelStats.level);
             SetCurrentValue(statType, nextLevelStats.value);
             SetCurrentGold(statType, nextLevelStats.goldRequired);
+            PlayFabLogin.Instance.SetCurrentLevel(statType, nextLevelStats.level);
             PlayFabLogin.Instance.SaveStatsToPlayFab();
             Debug.Log($"[{statType}] 업그레이드 성공! 현재 레벨: {nextLevelStats.level}, 값: {nextLevelStats.value}");
         }
@@ -156,5 +158,19 @@ public class GodStatManage : MonoBehaviour
             case "criticalDamage": criticalDamageGold = newGold; break;
         }
     }
+    public void GetCurrentValue(string statType)
+    {
+        int currentLevel = GetCurrentLevel(statType);
+        List<GodStatLevel> statLevels = GetStatLevels(statType);
+        GodStatLevel currentLevelStats = statLevels.Find(s => s.level == currentLevel);
+        switch (statType)
+        {
+            case "attackPower": attackPower = currentLevelStats.value; break;
+            case "attackSpeed": attackSpeed = currentLevelStats.value; break;
+            case "criticalRate": criticalRate = currentLevelStats.value; break;
+            case "criticalDamage": criticalDamage = currentLevelStats.value; break;
+        }
+    }
+
     public bool IsInitialized() => isInitialized;
 }

@@ -176,7 +176,6 @@ public class ArrowShooting : MonoBehaviour
                     }
                     damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
                     damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
         }
@@ -194,7 +193,6 @@ public class ArrowShooting : MonoBehaviour
                     }
                     damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.7f, 0), damage);
                     damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-                    Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
                 }
             }
         }
