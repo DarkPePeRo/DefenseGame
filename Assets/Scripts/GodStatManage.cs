@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using TMPro;
-using Unity.Collections.LowLevel.Unsafe;
 
 public class GodStatManage : MonoBehaviour
 {
     public GodStatsData godStatsData;
-    public float timer;
     private bool isInitialized = false;
 
-    public int level;
-    public float value;
-    public int goldRequired;
+    public float timer;
 
     public int attackPowerLevel = 1;
     public int attackSpeedLevel = 1;
@@ -30,38 +26,38 @@ public class GodStatManage : MonoBehaviour
     public int criticalRateGold = 100;
     public int criticalDamageGold = 100;
 
-
     void Awake()
     {
-        LoadGodStats(); // JSON 파일에서 데이터 로드
-        PlayFabLogin.Instance.LoadStatsFromPlayFab();
-        attackPowerLevel = PlayFabLogin.Instance.attackPowerLevel;
-        GetCurrentValue("attackPower");
-        if (godStatsData == null)
-        {
-            Debug.LogError("GodStats가 로드되지 않았습니다! JSON 파일을 확인하세요.");
-            return;
-        }
+        LoadGodStats();
 
+        PlayFabStatsService.Load(() =>
+        {
+            attackPowerLevel = PlayFabStatsService.AttackPowerLevel;
+            attackSpeedLevel = PlayFabStatsService.AttackSpeedLevel;
+            criticalRateLevel = PlayFabStatsService.CriticalRateLevel;
+            criticalDamageLevel = PlayFabStatsService.CriticalDamageLevel;
+
+            GetCurrentValue("attackPower");
+            GetCurrentValue("attackSpeed");
+            GetCurrentValue("criticalRate");
+            GetCurrentValue("criticalDamage");
+
+            isInitialized = true;
+        });
     }
+
     private void LoadGodStats()
     {
         string filePath = Path.Combine(Application.streamingAssetsPath, "GodStats.json");
         if (File.Exists(filePath))
         {
             string jsonData = File.ReadAllText(filePath);
-            Debug.Log($"JSON 데이터 로드: {jsonData}");  //  JSON 데이터 확인
-
             godStatsData = JsonUtility.FromJson<GodStatsData>(jsonData);
 
             if (godStatsData == null)
-            {
                 Debug.LogError("JSON 데이터가 올바르게 파싱되지 않았습니다!");
-            }
             else
-            {
-                Debug.Log("캐릭터 데이터 로드 완료");
-            }
+                Debug.Log("GodStats 데이터 로드 완료");
         }
         else
         {
@@ -69,11 +65,6 @@ public class GodStatManage : MonoBehaviour
         }
     }
 
-    private float GetStatValue(List<GodStatLevel> statLevels, int level)
-    {
-        GodStatLevel stat = statLevels.Find(s => s.level == level);
-        return stat != null ? stat.value : 0;
-    }
     public void LevelUp(string statType)
     {
         int currentLevel = GetCurrentLevel(statType);
@@ -96,9 +87,10 @@ public class GodStatManage : MonoBehaviour
             PlayerCurrency.Instance.SpendCurrency(PlayerCurrency.Instance.gold, nextLevelStats.goldRequired);
             SetCurrentLevel(statType, nextLevelStats.level);
             SetCurrentValue(statType, nextLevelStats.value);
-            SetCurrentGold(statType, nextLevelStats.goldRequired);
-            PlayFabLogin.Instance.SetCurrentLevel(statType, nextLevelStats.level);
-            PlayFabLogin.Instance.SaveStatsToPlayFab();
+            SetCurrentGold(statType, nextLevelStats.goldRequired); 
+            PlayFabStatsService.SetStat(statType, nextLevelStats.level);
+            PlayFabStatsService.Save();
+
             Debug.Log($"[{statType}] 업그레이드 성공! 현재 레벨: {nextLevelStats.level}, 값: {nextLevelStats.value}");
         }
         else
@@ -106,28 +98,31 @@ public class GodStatManage : MonoBehaviour
             Debug.LogWarning($"[{statType}] 골드 부족! 필요 골드: {nextLevelStats.goldRequired}, 현재 골드: {PlayerCurrency.Instance.gold.amount}");
         }
     }
+
     private List<GodStatLevel> GetStatLevels(string statType)
     {
-        switch (statType)
+        return statType switch
         {
-            case "attackPower": return godStatsData.attackPowerLevels;
-            case "attackSpeed": return godStatsData.attackSpeedLevels;
-            case "criticalRate": return godStatsData.criticalRateLevels;
-            case "criticalDamage": return godStatsData.criticalDamageLevels;
-            default: return null;
-        }
+            "attackPower" => godStatsData.attackPowerLevels,
+            "attackSpeed" => godStatsData.attackSpeedLevels,
+            "criticalRate" => godStatsData.criticalRateLevels,
+            "criticalDamage" => godStatsData.criticalDamageLevels,
+            _ => null,
+        };
     }
+
     private int GetCurrentLevel(string statType)
     {
-        switch (statType)
+        return statType switch
         {
-            case "attackPower": return attackPowerLevel;
-            case "attackSpeed": return attackSpeedLevel;
-            case "criticalRate": return criticalRateLevel;
-            case "criticalDamage": return criticalDamageLevel;
-            default: return 1;
-        }
+            "attackPower" => attackPowerLevel,
+            "attackSpeed" => attackSpeedLevel,
+            "criticalRate" => criticalRateLevel,
+            "criticalDamage" => criticalDamageLevel,
+            _ => 1,
+        };
     }
+
     private void SetCurrentLevel(string statType, int newLevel)
     {
         switch (statType)
@@ -138,6 +133,7 @@ public class GodStatManage : MonoBehaviour
             case "criticalDamage": criticalDamageLevel = newLevel; break;
         }
     }
+
     private void SetCurrentValue(string statType, float newValue)
     {
         switch (statType)
@@ -148,6 +144,7 @@ public class GodStatManage : MonoBehaviour
             case "criticalDamage": criticalDamage = newValue; break;
         }
     }
+
     private void SetCurrentGold(string statType, int newGold)
     {
         switch (statType)
@@ -158,18 +155,21 @@ public class GodStatManage : MonoBehaviour
             case "criticalDamage": criticalDamageGold = newGold; break;
         }
     }
+
     public void GetCurrentValue(string statType)
     {
         int currentLevel = GetCurrentLevel(statType);
         List<GodStatLevel> statLevels = GetStatLevels(statType);
         GodStatLevel currentLevelStats = statLevels.Find(s => s.level == currentLevel);
-        switch (statType)
+
+        if (currentLevelStats == null)
         {
-            case "attackPower": attackPower = currentLevelStats.value; break;
-            case "attackSpeed": attackSpeed = currentLevelStats.value; break;
-            case "criticalRate": criticalRate = currentLevelStats.value; break;
-            case "criticalDamage": criticalDamage = currentLevelStats.value; break;
+            Debug.LogError($"[{statType}] 현재 레벨 {currentLevel}에 해당하는 데이터가 없습니다.");
+            return;
         }
+
+        SetCurrentValue(statType, currentLevelStats.value);
+        SetCurrentGold(statType, currentLevelStats.goldRequired);
     }
 
     public bool IsInitialized() => isInitialized;

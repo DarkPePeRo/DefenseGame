@@ -10,32 +10,22 @@ public class PlacementZone : MonoBehaviour
     private void OnMouseDown()
     {
         GameObject selectedCharacterPrefab = CharacterSelection.Instance.selectedCharacterPrefab;
-
         if (selectedCharacterPrefab == null)
-        {
-            Debug.LogError("선택된 캐릭터 프리팹이 없습니다!");
             return;
-        }
 
-        // 현재 구역에 캐릭터가 있는 경우 제거
+        // 새 배치 전에 기존 인스턴스를 먼저 저장
+        GameObject previousInstance = CharacterSelection.Instance.selectedInstance;
+
+        // 현재 구역에 캐릭터 제거
         if (currentCharacter != null)
-        {
-            Debug.Log("현재 구역에 캐릭터가 있음, 제거 중...");
             RemoveCharacterFromZone();
-        }
 
-        // 새로운 캐릭터를 현재 구역에 배치 (selectedInstance 초기화)
+        // 이전 인스턴스를 다른 구역에서 제거
+        if (previousInstance != null)
+            RemoveCharacterFromOtherZone(previousInstance, (Vector2)transform.position);
+
+        // 새로운 캐릭터 배치
         PlaceNewCharacter(selectedCharacterPrefab);
-
-        // 배치된 캐릭터 인스턴스 가져오기
-        GameObject selectedInstance = CharacterSelection.Instance.selectedInstance;
-
-        // 다른 구역에 선택된 캐릭터가 있는 경우 제거
-        if (selectedInstance != null)
-        {
-            Debug.Log("다른 구역에 캐릭터가 있음, 제거 중...");
-            RemoveCharacterFromOtherZone(selectedInstance, (Vector2)transform.position);
-        }
 
         // 참조 초기화
         FinalizeSelection();

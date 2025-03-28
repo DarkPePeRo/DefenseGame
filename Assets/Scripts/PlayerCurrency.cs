@@ -21,7 +21,6 @@ public class PlayerCurrency : MonoBehaviour
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI diamondText;
 
-    public PlayFabLogin playFab;
 
     public float timer;
 

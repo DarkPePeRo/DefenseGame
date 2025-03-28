@@ -103,7 +103,6 @@ public class Character : MonoBehaviour
 
     public void LevelUp()
     {
-        Debug.LogError(characterStats);
         if (characterStats == null )
         {
             Debug.LogError("레벨업을 시도했으나, characterStats 데이터가 없습니다.");

@@ -7,16 +7,16 @@ using UnityEngine.UI;
 public class WaveSystem : MonoBehaviour
 {
     public int currentWave = 1;
-    public int requiredEnemies = 10; // 잡아야 하는 DemoPlayer 수
+    public int requiredEnemies = 10;
     public int enemyCountPerWave;
     public int enemyCount;
     public bool isBossSpawned = false;
+
     public Spawn spawn;
     public TextMeshProUGUI stage;
     public MultiPrefabPool pool;
     public GameObject BossPrefab;
     public Boss boss;
-    public PlayFabLeaderBoard leaderBoard;
 
     public GameObject defeatedUI;
     private CanvasGroup defeatedCanvasGroup;
@@ -28,20 +28,25 @@ public class WaveSystem : MonoBehaviour
     public Slider bossHPSlider;
     public TextMeshProUGUI bossHPText;
 
-    public float[] healthMultipliers; // 웨이브에 따른 체력 배수
-    public int[] goldRewards;         // 웨이브에 따른 골드 보상
+    public float[] healthMultipliers;
+    public int[] goldRewards;
 
     public EndLine endLine;
+
     void Start()
     {
         defeatedCanvasGroup = defeatedUI.GetComponent<CanvasGroup>();
         winCanvasGroup = winUI.GetComponent<CanvasGroup>();
         bossCanvasGroup = bossUI.GetComponent<CanvasGroup>();
         boss = BossPrefab.GetComponent<Boss>();
-        currentWave = PlayFabLogin.Instance.currentWave;
-        StartWave();
 
+        PlayFabStageService.Load(loadedStages => {
+            if (loadedStages.Count > 0)
+                currentWave = loadedStages[loadedStages.Count - 1];
+            StartWave();
+        });
     }
+
     private void Update()
     {
         if (boss != null && boss.CurrentHP > 0)
@@ -52,23 +57,25 @@ public class WaveSystem : MonoBehaviour
         else if (boss != null && boss.CurrentHP <= 0)
         {
             OnBossDefeated();
-            boss = null; // Boss defeated, reset boss reference if needed.
+            boss = null;
         }
     }
 
     public void StartWave()
     {
         pool.ReturnAllObjects();
-        enemyCountPerWave = requiredEnemies + (currentWave - 1) * 5; // 웨이브마다 적 수 증가
+        enemyCountPerWave = requiredEnemies + currentWave;
         enemyCount = enemyCountPerWave;
         isBossSpawned = false;
-        stage.text = "Stage : "+currentWave.ToString();
-        if(enemyCount > 0)
+        stage.text = "Stage : " + currentWave.ToString();
+
+        if (enemyCount > 0)
         {
             Debug.Log("EnemySpawn");
             spawn.StartCoroutine("SpawnEnemy");
         }
     }
+
     public void AgainWave()
     {
         Debug.Log("Again");
@@ -80,13 +87,15 @@ public class WaveSystem : MonoBehaviour
         currentWave--;
         endLine.isEnd = false;
     }
-    public void AgainWaveCharacterChanged() 
+
+    public void AgainWaveCharacterChanged()
     {
         spawn.StopCoroutine("SpawnEnemy");
         pool.ReturnAllObjects();
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
     }
+
     public void OnEnemyDefeated()
     {
         enemyCount--;
@@ -100,19 +109,20 @@ public class WaveSystem : MonoBehaviour
 
     public void OnBossDefeated()
     {
-        int currentScore = currentWave;
-        // PlayFabManager를 통해 점수 갱신
         currentWave++;
-        PlayFabLogin.Instance.UpdateScore(currentWave);
-        PlayFabLogin.Instance.AddClearedStage(currentWave);
+        PlayFabStageService.Load(stages => {
+            if (!stages.Contains(currentWave))
+                stages.Add(currentWave);
+            PlayFabStageService.Save(stages);
+        });
+
         spawn.currentSpawnCount = 0;
         bossHPUI.SetActive(false);
-        StartCoroutine(FadeInWinUI()); 
+        StartCoroutine(FadeInWinUI());
         StartWave();
         isBossSpawned = false;
         PlayerCurrency.Instance.AddCurrency(PlayerCurrency.Instance.gold, 0, PlayerCurrency.Instance.diamond, 500);
     }
-
 
     void SpawnBoss()
     {
@@ -121,6 +131,7 @@ public class WaveSystem : MonoBehaviour
         Debug.Log("BossSpawn");
         bossHPUI.SetActive(true);
     }
+
     public float GetHealthMultiplier()
     {
         if (currentWave - 1 < healthMultipliers.Length)
@@ -134,23 +145,21 @@ public class WaveSystem : MonoBehaviour
             return goldRewards[currentWave - 1];
         return 100;
     }
+
     private IEnumerator FadeInDefeatedUI()
     {
         if (defeatedCanvasGroup != null)
         {
-            defeatedUI.SetActive(true); // UI 활성화
-            float duration = 1f; // 페이드 인 지속 시간
+            defeatedUI.SetActive(true);
+            float duration = 1f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 defeatedCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
-
-            yield return new WaitForSeconds(1f); // 1초 동안 유지
-
+            yield return new WaitForSeconds(1f);
             StartCoroutine(FadeOutDefeatedUI());
         }
     }
@@ -158,37 +167,33 @@ public class WaveSystem : MonoBehaviour
     private IEnumerator FadeOutDefeatedUI()
     {
         if (defeatedCanvasGroup != null)
+        {
+            float duration = 1f;
+            float elapsed = 0f;
+            while (elapsed < duration)
             {
-                float duration = 1f; // 페이드 아웃 지속 시간
-                float elapsed = 0f;
-
-                while (elapsed < duration)
-                {
-                    elapsed += Time.deltaTime;
-                    defeatedCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
-                    yield return null;
-                }
-
-                defeatedUI.SetActive(false); // UI 비활성화
+                elapsed += Time.deltaTime;
+                defeatedCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
             }
+            defeatedUI.SetActive(false);
+        }
     }
+
     private IEnumerator FadeInBossUI()
     {
         if (bossCanvasGroup != null)
         {
-            bossUI.SetActive(true); // UI 활성화
-            float duration = 1f; // 페이드 인 지속 시간
+            bossUI.SetActive(true);
+            float duration = 1f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 bossCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
-
-            yield return new WaitForSeconds(1f); // 1초 동안 유지
-
+            yield return new WaitForSeconds(1f);
             StartCoroutine(FadeOutBossUI());
         }
     }
@@ -197,36 +202,32 @@ public class WaveSystem : MonoBehaviour
     {
         if (bossCanvasGroup != null)
         {
-            float duration = 1f; // 페이드 아웃 지속 시간
+            float duration = 1f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 bossCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
-
-            bossUI.SetActive(false); // UI 비활성화
+            bossUI.SetActive(false);
         }
     }
+
     private IEnumerator FadeInWinUI()
     {
         if (winCanvasGroup != null)
         {
-            winUI.SetActive(true); // UI 활성화
-            float duration = 1f; // 페이드 인 지속 시간
+            winUI.SetActive(true);
+            float duration = 1f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 winCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
-
-            yield return new WaitForSeconds(1f); // 1초 동안 유지
-
+            yield return new WaitForSeconds(1f);
             StartCoroutine(FadeOutWinUI());
         }
     }
@@ -235,17 +236,15 @@ public class WaveSystem : MonoBehaviour
     {
         if (winCanvasGroup != null)
         {
-            float duration = 1f; // 페이드 아웃 지속 시간
+            float duration = 1f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 winCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
                 yield return null;
             }
-
-            winUI.SetActive(false); // UI 비활성화
+            winUI.SetActive(false);
         }
     }
 }

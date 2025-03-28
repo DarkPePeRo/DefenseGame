@@ -84,6 +84,14 @@ public class ButtonManager : MonoBehaviour
     {
         StartCoroutine(FadeOutTowerUI());
     }
+    public void HomeButton()
+    {
+        shopUI.SetActive(false);
+        rankingUI.SetActive(false);
+        characterUI.SetActive(false);
+        godUI.SetActive(false);
+        towerUI.SetActive(false);
+    }
 
     private IEnumerator FadeInShopUI()
     {

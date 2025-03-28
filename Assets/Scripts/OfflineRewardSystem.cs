@@ -22,14 +22,14 @@ public class OfflineRewardSystem : MonoBehaviour
         if (pause)
         {
             SaveLastLogoutTime();
-            PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
+            PlayFabCurrencyService.Save(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
         }
     }
 
     private void OnApplicationQuit()
     {
         SaveLastLogoutTime();
-        PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
+        PlayFabCurrencyService.Save(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
     }
 
     private void SaveLastLogoutTime()
@@ -64,7 +64,7 @@ public class OfflineRewardSystem : MonoBehaviour
     private void AddCurrency(int amountGold, int amountDiamond)
     {
         PlayerCurrency.Instance.AddCurrency(PlayerCurrency.Instance.gold, amountGold, PlayerCurrency.Instance.diamond, amountDiamond);
-        PlayFabLogin.Instance.SavePlayerData(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
+        PlayFabCurrencyService.Save(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
     }
 
 }

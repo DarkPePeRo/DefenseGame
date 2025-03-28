@@ -18,7 +18,7 @@ public class GameManager : MonoBehaviour
     }
     public void Start()
     {
-        PlayFabLogin.Instance.LoadPlacedCharactersFromPlayFab();
+        PlayFabCharacterPlacementService.Load(() => { });
     }
     public void PlaceCharacter(Vector2 position, GameObject character)
     {
@@ -27,23 +27,29 @@ public class GameManager : MonoBehaviour
             // 위치에서 캐릭터 제거
             if (placedCharacters.ContainsKey(position))
             {
-                Debug.Log($"캐릭터 제거됨: {position}");
                 placedCharacters.Remove(position);
             }
         }
         else
         {
-            // 기존 위치에서 캐릭터 제거
-            Vector2? oldPosition = GetCharacterPosition(character);
-            if (oldPosition.HasValue)
+            // 같은 이름 가진 캐릭터가 다른 위치에 있다면 제거
+            var positionsToRemove = new List<Vector2>();
+            foreach (var kvp in placedCharacters)
             {
-                Debug.Log($"캐릭터 이동됨: {oldPosition.Value}");
-                placedCharacters.Remove(oldPosition.Value);
+                if (kvp.Value.name.Replace("(Clone)", "").Trim() == character.name.Replace("(Clone)", "").Trim())
+                {
+                    positionsToRemove.Add(kvp.Key);
+                }
             }
 
-            // 새로운 위치에 캐릭터 추가
+            foreach (var pos in positionsToRemove)
+            {
+                Destroy(placedCharacters[pos]);
+                placedCharacters.Remove(pos);
+            }
+
+            // 새 위치에 캐릭터 배치
             placedCharacters[position] = character;
-            Debug.Log($"캐릭터 배치됨: {position}");
         }
     }
 
@@ -51,14 +57,13 @@ public class GameManager : MonoBehaviour
     {
         foreach (var kvp in placedCharacters)
         {
-            if (kvp.Value == character) // 참조로 비교
+            // 이름으로 비교 (Clone 제거 후 비교 가능)
+            if (kvp.Value != null && kvp.Value.name.Replace("(Clone)", "").Trim() == character.name.Replace("(Clone)", "").Trim())
             {
-                Debug.Log($"캐릭터 위치 확인됨: {kvp.Key}");
                 return kvp.Key;
             }
         }
 
-        Debug.LogWarning($"캐릭터가 placedCharacters에 없습니다: {character?.name}");
         return null;
     }
 

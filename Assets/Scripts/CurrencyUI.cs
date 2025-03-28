@@ -1,15 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class CurrencyUI : MonoBehaviour
 {
-    public TextMeshProUGUI goldText;
-    public TextMeshProUGUI diamondText;
-    public TextMeshProUGUI shopGoldText;
-    public TextMeshProUGUI shopDiamondText;
-    public TextMeshProUGUI rankingGoldText;
-    public TextMeshProUGUI rankingDiamondText;
+    public List<TextMeshProUGUI> goldTexts;
+    public List<TextMeshProUGUI> diamondTexts;
 
     private int currentGold;    // 화면에 표시되는 현재 금액
     private int targetGold;     // 목표 금액
@@ -96,20 +93,24 @@ public class CurrencyUI : MonoBehaviour
         }
         diamondCoroutine = null;
     }
-
     private void UpdateGoldText()
     {
-        goldText.text = FormatCurrency(currentGold);
-        shopGoldText.text = FormatCurrency(currentGold);
-        rankingGoldText.text = FormatCurrency(currentGold);
+        string formatted = FormatCurrency(currentGold);
+        foreach (var text in goldTexts)
+        {
+            text.text = formatted;
+        }
     }
 
     private void UpdateDiamondText()
     {
-        diamondText.text = FormatCurrency(currentDiamond);
-        shopDiamondText.text = FormatCurrency(currentDiamond);
-        rankingDiamondText.text = FormatCurrency(currentDiamond);
+        string formatted = FormatCurrency(currentDiamond);
+        foreach (var text in diamondTexts)
+        {
+            text.text = formatted;
+        }
     }
+
 
     public string FormatCurrency(int amount)
     {
