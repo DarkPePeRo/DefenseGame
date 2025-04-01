@@ -77,7 +77,7 @@ public class Archer : MonoBehaviour
             {
                 arrowScript.target = target;
                 arrowScript.SetInitialValues(); // 화살 초기화
-                arrowScript.baseDamage = character.GetCurrentAttackPower();
+                arrowScript.baseDamage = character.CurrentAttackPower;
             }
             else
             {

@@ -6,42 +6,69 @@ using TMPro;
 
 public class LoadingManager : MonoBehaviour
 {
-    [SerializeField] private Slider progressBar; // 로딩 바
-    [SerializeField] private TextMeshProUGUI progressText;  // 로딩 텍스트
-    [SerializeField] private TextMeshProUGUI EndText;  // 로딩 텍스트
 
-    public void LoadScene(string sceneName)
+    public static LoadingManager Instance;
+    private void Awake()
     {
-        StartCoroutine(LoadSceneAsync(sceneName));
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else Destroy(gameObject);
+    }
+    [SerializeField] private Slider progressBar;
+    [SerializeField] private TextMeshProUGUI progressText;
+    [SerializeField] private TextMeshProUGUI endText;
+
+    private bool isDataLoaded = false;
+
+    private void Start()
+    {
+        PlayFabAuthService1.Instance.OnLoginSuccess += () =>
+        {
+            StartCoroutine(LoadDataThenScene());
+        };
     }
 
-    private IEnumerator LoadSceneAsync(string sceneName)
+    private IEnumerator LoadDataThenScene()
     {
-        // 비동기적으로 다음 씬 로드 시작
-        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+        float fakeProgress = 0f;
 
-        // 로딩이 끝날 때까지 로딩 화면 표시
-        operation.allowSceneActivation = false; // 로딩이 완료되기 전까지 자동 전환 방지
-
-        while (!operation.isDone)
+        // 웹소켓 연결
+        PlayFabChatService.Instance.Connect(PlayFabAuthService1.Instance.PlayFabId);
+        // 데이터 순차 로드
+        PlayFabCurrencyService.Load(() =>
         {
-            // 로딩 진행률 업데이트
-            float progress = Mathf.Clamp01(operation.progress / 0.9f); // 90%까지 로딩 완료
-            progressBar.value = progress;
-            progressText.text = (progress * 100).ToString("F0") + "%";
-
-            // 로딩이 90% 이상 완료되었을 때 전환
-            if (operation.progress >= 0.9f)
+            PlayFabStageService.Load(stageData =>
             {
-                EndText.text = "Press anywhere to Start Game";
-                progressText.text = "Loading Success"; // 텍스트 변경
-                if (Input.anyKeyDown)
+                PlayFabStatsService.Load(() =>
                 {
-                    operation.allowSceneActivation = true; // 씬 전환 허용
-                }
-            }
+                    isDataLoaded = true;
+                });
+            });
+        });
 
+        while (!isDataLoaded)
+        {
+            // 로딩 UI 진행 효과
+            fakeProgress = Mathf.MoveTowards(fakeProgress, 0.9f, Time.deltaTime);
+            progressBar.value = fakeProgress;
+            progressText.text = (fakeProgress * 100).ToString("F0") + "%";
             yield return null;
         }
+
+        // 완료 UI 표시
+        progressBar.value = 1f;
+        progressText.text = "100%";
+        endText.text = "Press anywhere to Start Game";
+
+        // 키 입력 대기
+        while (!Input.anyKeyDown)
+        {
+            yield return null;
+        }
+
+        SceneManager.LoadScene("SampleScene");
     }
 }

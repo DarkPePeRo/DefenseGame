@@ -9,7 +9,7 @@ public class RestartButton : MonoBehaviour
     public TimeScaleToggle timeScaleToggle;
     public void OnRestartButtonClick()
     {
-        PlayFabCharacterPlacementService.Save(GameManager.Instance.GetPlacedCharacters());
+        PlayFabCharacterPlacementService.Save(GameManager.Instance.placedCharacters);
         timeScaleToggle.RestartTime();
         restartUI.SetActive(false);
         waveSystem.AgainWaveCharacterChanged();

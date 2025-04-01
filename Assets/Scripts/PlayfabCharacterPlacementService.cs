@@ -2,71 +2,97 @@ using PlayFab;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
-
 [Serializable]
 public class PlacementData
 {
     public string characterName;
-    public Vector2 position;
+    public int slotIndex;
 }
 
 [Serializable]
 public class PlacementSaveData
 {
-    public List<PlacementData> placements = new();
+    public PlacementData[] placements;
 }
-
 public static class PlayFabCharacterPlacementService
 {
     private const string PlacementKey = "PlacedCharacters";
 
-    public static void Save(Dictionary<Vector2, GameObject> placedCharacters)
+    public static void Save(GameObject[] placedCharacters)
     {
-        PlacementSaveData data = new();
-        foreach (var kvp in placedCharacters)
+        List<PlacementData> placements = new();
+        List<CharacterSaveData> progress = new();
+
+        for (int i = 0; i < placedCharacters.Length; i++)
         {
-            string name = kvp.Value.name.Replace("(Clone)", "").Trim();
-            data.placements.Add(new PlacementData { characterName = name, position = kvp.Key });
+            var obj = placedCharacters[i];
+            if (obj == null) continue;
+
+            string cleanName = obj.name.Replace("(Clone)", "").Trim();
+            placements.Add(new PlacementData { characterName = cleanName, slotIndex = i });
+
+            var c = obj.GetComponent<Character>();
+            if (c != null)
+            {
+                progress.Add(new CharacterSaveData
+                {
+                    characterId = cleanName,
+                    level = Mathf.Max(c.CurrentLevel, 1)
+                });
+            }
         }
 
-        var json = JsonUtility.ToJson(data);
-        var request = new UpdateUserDataRequest { Data = new Dictionary<string, string> { { PlacementKey, json } } };
-        PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log("캐릭터 배치 저장 성공"),
-            error => Debug.LogError("캐릭터 배치 저장 실패: " + error.GenerateErrorReport()));
+        var data = new PlacementSaveData { placements = placements.ToArray() };
+        string json = JsonUtility.ToJson(data);
+
+        PlayFabClientAPI.UpdateUserData(new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string> { { PlacementKey, json } }
+        },
+        result => Debug.Log("배치 저장 완료"),
+        error => Debug.LogError("배치 저장 실패: " + error.GenerateErrorReport()));
+
+        PlayFabCharacterProgressService.Save(progress);
     }
 
     public static void Load(Action onComplete)
     {
-        PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result => {
-            if (result.Data == null || !result.Data.ContainsKey(PlacementKey)) { onComplete?.Invoke(); return; }
-            string json = result.Data[PlacementKey].Value;
-            PlacementSaveData data = JsonUtility.FromJson<PlacementSaveData>(json);
+        PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result =>
+        {
+            if (result.Data == null || !result.Data.ContainsKey(PlacementKey))
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            var json = result.Data[PlacementKey].Value;
+            var data = JsonUtility.FromJson<PlacementSaveData>(json);
 
             GameManager.Instance.ClearPlacedCharacters();
 
-            foreach (var placement in data.placements)
+            foreach (var p in data.placements)
             {
-                var prefab = Resources.Load<GameObject>($"Characters/{placement.characterName}");
-                if (prefab == null)
+                var character = CharacterManager.Instance.GetCharacterByName(p.characterName);
+                if (character == null)
                 {
-                    Debug.LogWarning($"프리팹 {placement.characterName}를 찾을 수 없습니다.");
+                    Debug.LogWarning($"[Placement] 캐릭터 '{p.characterName}' 못 찾음");
                     continue;
                 }
 
-                GameObject instance = GameObject.Instantiate(prefab, placement.position, Quaternion.identity);
-                instance.name = prefab.name;
-                CharacterManager.Instance.characters.Add(instance.GetComponent<Character>());
-                GameManager.Instance.PlaceCharacter(placement.position, instance);
+                GameManager.Instance.PlaceCharacterAtSlot(p.slotIndex, character.gameObject);
+
             }
 
-            Debug.Log("배치 캐릭터 로드 완료");
+            CharacterManager.Instance.RefreshAllCharacterUI();
             onComplete?.Invoke();
         },
-        error => {
-            Debug.LogError("배치 캐릭터 로드 실패: " + error.GenerateErrorReport());
+        error =>
+        {
+            Debug.LogError("배치 로드 실패: " + error.GenerateErrorReport());
             onComplete?.Invoke();
         });
     }
 }
+

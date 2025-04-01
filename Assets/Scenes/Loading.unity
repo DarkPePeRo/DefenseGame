@@ -536,7 +536,7 @@ GameObject:
   - component: {fileID: 1552716358}
   - component: {fileID: 1552716357}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: PlayfabChatService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -600,7 +600,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   progressBar: {fileID: 3500719972699830594}
   progressText: {fileID: 3500719971532866488}
-  EndText: {fileID: 272037326}
+  endText: {fileID: 272037326}
 --- !u!4 &1732935056
 Transform:
   m_ObjectHideFlags: 0
@@ -764,7 +764,7 @@ GameObject:
   - component: {fileID: 2076949630}
   - component: {fileID: 2076949631}
   m_Layer: 0
-  m_Name: PlayFabLogin
+  m_Name: PlayFabAuthService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -797,50 +797,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0edd8bd0ebd035b4380c1c49b24fcf8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &2099806501
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2099806503}
-  - component: {fileID: 2099806502}
-  m_Layer: 0
-  m_Name: GameObject (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2099806502
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2099806501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cbe48a486bb78ef43ba91d0130966c72, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &2099806503
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2099806501}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1635.896, y: 470.76468, z: 2.5480587}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3500719970670691600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1238,7 +1194,6 @@ SceneRoots:
   - {fileID: 655186567}
   - {fileID: 1732935056}
   - {fileID: 2076949630}
+  - {fileID: 1552716358}
   - {fileID: 1025124656}
   - {fileID: 768224838}
-  - {fileID: 1552716358}
-  - {fileID: 2099806503}

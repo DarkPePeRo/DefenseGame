@@ -9,6 +9,8 @@ public class GodStatManage : MonoBehaviour
     public GodStatsData godStatsData;
     private bool isInitialized = false;
 
+    private Coroutine saveCoroutine;
+
     public float timer;
 
     public int attackPowerLevel = 1;
@@ -89,7 +91,8 @@ public class GodStatManage : MonoBehaviour
             SetCurrentValue(statType, nextLevelStats.value);
             SetCurrentGold(statType, nextLevelStats.goldRequired); 
             PlayFabStatsService.SetStat(statType, nextLevelStats.level);
-            PlayFabStatsService.Save();
+            //PlayFabStatsService.Save();
+            RequestSave();
 
             Debug.Log($"[{statType}] 업그레이드 성공! 현재 레벨: {nextLevelStats.level}, 값: {nextLevelStats.value}");
         }
@@ -173,4 +176,22 @@ public class GodStatManage : MonoBehaviour
     }
 
     public bool IsInitialized() => isInitialized;
+
+    public void RequestSave()
+    {
+        if (saveCoroutine != null)
+        {
+            StopCoroutine(saveCoroutine);
+        }
+
+        saveCoroutine = StartCoroutine(DelayedSave());
+    }
+
+    private IEnumerator DelayedSave()
+    {
+        yield return new WaitForSeconds(1f); // 저장 딜레이 (1초 내 중복 막음)
+        PlayFabStatsService.Save();
+        Debug.Log("[DebouncedSaver] 저장 실행됨");
+        saveCoroutine = null;
+    }
 }
