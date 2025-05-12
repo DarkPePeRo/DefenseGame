@@ -4,6 +4,9 @@ using PlayFab.ClientModels;
 using UnityEngine;
 using TMPro;
 using GooglePlayGames.BasicApi;
+using System;
+using PlayFab.Json;
+using System.Collections;
 
 [System.Serializable]
 public class Currency
@@ -18,11 +21,11 @@ public class PlayerCurrency : MonoBehaviour
     public Currency gold;
     public Currency diamond;
 
-    public TextMeshProUGUI goldText;
-    public TextMeshProUGUI diamondText;
+    private int goldBuffer = 0;
+    private float saveInterval = 20f;
+    private float saveTimer = 0f;
+    private bool isSaving = false;
 
-
-    public float timer;
 
     private void Awake()
     {
@@ -31,46 +34,203 @@ public class PlayerCurrency : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject); // 오브젝트 유지
+            gold = new Currency { name = "gold", amount = 0 };
+            diamond = new Currency { name = "diamond", amount = 0 };
         }
         else
         {
             Destroy(gameObject); // 중복된 오브젝트는 제거
         }
     }
-
-    private void Start()
-    {
-        gold = new Currency { name = "gold", amount = 0 };
-        diamond = new Currency { name = "diamond", amount = 0 };
-    }
-
     private void Update()
     {
-    }
+        if (goldBuffer <= 0 || isSaving) return;
 
-
-    public void AddCurrency(Currency gold, int amountGold, Currency diamond, int amountDiamond)
-    {
-        gold.amount += amountGold;
-        diamond.amount += amountDiamond;
-        Debug.Log($"{gold.name} added: {amountGold}. New total: {gold.amount}");
-        Debug.Log($"{diamond.name} added: {amountDiamond}. New total: {diamond.amount}");
-        Debug.Log("Saved");
-    }
-
-    public bool SpendCurrency(Currency currency, int amount)
-    {
-        if (currency.amount >= amount)
+        saveTimer += Time.deltaTime;
+        if (saveTimer >= saveInterval)
         {
-            currency.amount -= amount;
-            Debug.Log($"{currency.name} spent: {amount}. New total: {currency.amount}");
-            return true;
-        }
-        else
-        {
-            Debug.Log("Not enough " + currency.name);
-            return false;
+            saveTimer = 0f;
+            StartCoroutine(SaveBufferedGoldToServer());
         }
     }
+    public void AddGoldBuffered(int amount)
+    {
+        goldBuffer += amount;
+        gold.amount += amount; // UI 갱신용
 
+        Debug.Log($"골드 획득 누적: {amount} → 총 누적: {goldBuffer}");
+    }
+    private IEnumerator SaveBufferedGoldToServer()
+    {
+        isSaving = true;
+
+        int amountToSave = goldBuffer;
+        goldBuffer = 0; // 저장 시점에서 초기화 (실패 시 다시 더함)
+
+        Debug.Log($"[골드 저장 요청] {amountToSave}");
+
+        bool success = false;
+
+        var request = new ExecuteCloudScriptRequest
+        {
+            FunctionName = "GrantGold",
+            FunctionParameter = new { amount = amountToSave }
+        };
+
+        PlayFabClientAPI.ExecuteCloudScript(request, result =>
+        {
+            var json = PlayFabSimpleJson.DeserializeObject<Dictionary<string, object>>(result.FunctionResult.ToString());
+            gold.amount = Convert.ToInt32(json["newBalance"]);
+            Debug.Log($"[골드 저장 성공] 서버 반영 골드: {gold.amount}");
+            success = true;
+        },
+        error =>
+        {
+            Debug.LogError("[골드 저장 실패] 재시도 예정: " + error.GenerateErrorReport());
+        });
+
+        yield return new WaitForSeconds(0.5f); // 서버 응답 대기 (보장 아님)
+        if (!success)
+        {
+            goldBuffer += amountToSave; // 실패 시 다시 더해줌
+        }
+
+        isSaving = false;
+    }
+
+    public bool HasGoldBuffer()
+    {
+        return goldBuffer > 0;
+    }
+
+    public void RequestAddDiamond(string reason)
+    {
+        PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+        {
+            FunctionName = "GrantDiamond",
+            FunctionParameter = new { reason = reason }
+        }, result =>
+        {
+            try
+            {
+                // JSON 문자열 직접 파싱
+                var jsonText = result.FunctionResult.ToString();
+                var json = PlayFabSimpleJson.DeserializeObject<Dictionary<string, object>>(jsonText);
+
+                if (json.TryGetValue("newBalance", out var balanceObj))
+                {
+                    int balance = Convert.ToInt32(balanceObj);
+                    PlayerCurrency.Instance.diamond.amount = balance;
+                    Debug.Log($"[Diamond] 지급 완료: {balance}"); 
+                    Debug.Log("FunctionResult JSON: " + result.FunctionResult.ToString());
+
+                }
+                else
+                {
+                    Debug.LogWarning("[Diamond] newBalance 키 없음");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[Diamond] 예외 발생: " + ex.Message);
+            }
+        }, error =>
+        {
+            Debug.LogError("[Diamond] 지급 실패: " + error.GenerateErrorReport());
+        });
+    }
+
+
+    // 골드 소비 요청
+    public void RequestSpendGold(int amount, Action<bool> onResult = null)
+    {
+        PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+        {
+            FunctionName = "SpendGold",
+            FunctionParameter = new { amount = amount }
+        }, result =>
+        {
+            var json = PlayFabSimpleJson.DeserializeObject<Dictionary<string, object>>(result.FunctionResult.ToString());
+
+            bool success = Convert.ToBoolean(json["success"]);
+            if (success)
+            {
+                gold.amount = Convert.ToInt32(json["newBalance"]);
+                Debug.Log($"[Gold] 사용 성공: {gold.amount}");
+                onResult?.Invoke(true);
+            }
+            else
+            {
+                Debug.LogWarning("[Gold] 사용 실패: 잔액 부족");
+                onResult?.Invoke(false);
+            }
+        }, error =>
+        {
+            Debug.LogError("[Gold] 사용 실패: " + error.GenerateErrorReport());
+            onResult?.Invoke(false);
+        });
+    }
+
+    // 다이아 소비 요청
+    public void RequestSpendDiamond(string reason, Action<bool> onResult = null)
+    {
+        PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+        {
+            FunctionName = "SpendDiamond",
+            FunctionParameter = new { reason = reason }
+        }, result =>
+        {
+            var json = result.FunctionResult as Dictionary<string, object>;
+            if (json != null && (bool)json["success"])
+            {
+                diamond.amount = Convert.ToInt32(json["newBalance"]);
+                Debug.Log($"남은 잔액: {diamond.amount}");
+                onResult?.Invoke(true);
+            }
+            else
+            {
+                Debug.LogWarning("[Diamond] 사용 실패 (잔액 부족 또는 기타)");
+                onResult?.Invoke(false);
+            }
+        }, error =>
+        {
+            Debug.LogError("다이아 소비 실패: " + error.GenerateErrorReport());
+            onResult?.Invoke(false);
+        });
+    }
+
+    // 앱 종료 시 강제 골드 저장
+    private void OnApplicationQuit()
+    {
+        if (goldBuffer > 0)
+        {
+            Debug.Log("[종료 저장] 앱 종료 전에 골드 저장 시도");
+            SaveBufferedGoldSync();
+        }
+    }
+
+    private void SaveBufferedGoldSync()
+    {
+        int amount = goldBuffer;
+        goldBuffer = 0;
+
+        var request = new ExecuteCloudScriptRequest
+        {
+            FunctionName = "GrantGold",
+            FunctionParameter = new { amount = amount }
+        };
+
+        // 동기 저장은 PlayFab에서 비동기라 약간의 트릭
+        PlayFabClientAPI.ExecuteCloudScript(request, result =>
+        {
+            var json = PlayFabSimpleJson.DeserializeObject<Dictionary<string, object>>(result.FunctionResult.ToString());
+            gold.amount = Convert.ToInt32(json["newBalance"]);
+            Debug.Log($"[종료 저장 성공] 골드: {gold.amount}");
+        },
+        error =>
+        {
+            Debug.LogError("[종료 저장 실패]: " + error.GenerateErrorReport());
+            goldBuffer += amount;
+        });
+    }
 }

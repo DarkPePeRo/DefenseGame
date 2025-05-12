@@ -20,8 +20,6 @@ public class Thunder : MonoBehaviour
     private Vector3 targetdir;
     private Vector3 previousPosition;
     private MultiPrefabPool objectPool;
-    public Spawn spawn;
-    public WaveSystem waveSystem;
 
     public GodStatManage godStatManage;
     void Start()
@@ -31,9 +29,7 @@ public class Thunder : MonoBehaviour
         {
             Debug.LogError("Object Pool not found! Please assign a PoolManager with MultiPrefabPool component.");
         }
-        waveSystem = FindObjectOfType<WaveSystem>();
         damageUIManager = FindObjectOfType<DamageUIManager>();
-        spawn = GameObject.Find("Spawn").GetComponent<Spawn>();
         god = FindObjectOfType<God>();
         godStatManage = FindObjectOfType<GodStatManage>();
         baseDamage = godStatManage.attackPower;
@@ -57,7 +53,9 @@ public class Thunder : MonoBehaviour
         {
             god = FindObjectOfType<God>();
         }
-        target = god.shortEnemyObject;
+        if(god.shortEnemyObject != null){
+            target = god.shortEnemyObject;
+        }
         if(godStatManage != null)
         {
             baseDamage = godStatManage.attackPower;

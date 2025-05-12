@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class CharacterLoader : MonoBehaviour
 {
@@ -8,6 +10,11 @@ public class CharacterLoader : MonoBehaviour
     private Dictionary<string, Character> characterMap = new();
 
     private void Start()
+    {
+        StartCoroutine(LoadCharacters());
+    }
+
+    private IEnumerator LoadCharacters()
     {
         GameObject[] prefabs = Resources.LoadAll<GameObject>(prefabPath);
         foreach (var prefab in prefabs)
@@ -26,42 +33,64 @@ public class CharacterLoader : MonoBehaviour
             characterMap[character.name.ToLower()] = character;
         }
 
-        PlayFabCharacterProgressService.Load(saveList =>
+        bool isDone = false;
+        List<CharacterSaveData> saveList = new();
+
+        PlayFabCharacterProgressService.Load(result => {
+            saveList = result;
+            isDone = true;
+        });
+
+        yield return new WaitUntil(() => isDone);
+
+        List<CharacterSaveData> toSave = new();
+
+        foreach (var kvp in characterMap)
         {
-            List<CharacterSaveData> toSave = new();
+            var character = kvp.Value;
+            string id = character.name.ToLower();
 
-            foreach (var kvp in characterMap)
+            // JSON 스탯 로드
+            string statPath = Path.Combine(Application.streamingAssetsPath, $"{character.name}Stats.json");
+#if UNITY_ANDROID && !UNITY_EDITOR
+            string uri = statPath;
+#else
+            string uri = "file://" + statPath;
+#endif
+            UnityWebRequest request = UnityWebRequest.Get(uri);
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
             {
-                var character = kvp.Value;
-                string id = character.name.ToLower();
-
-                // JSON 스탯 로드
-                string statPath = Path.Combine(Application.streamingAssetsPath, $"{character.name}Stats.json");
-                if (File.Exists(statPath))
-                {
-                    string json = File.ReadAllText(statPath);
-                    CharacterLevelData levelData = JsonUtility.FromJson<CharacterLevelData>(json);
-                    character.SetLevelData(levelData);
-                }
-
-                // 저장된 캐릭터 찾기
-                var save = saveList.Find(s => s.characterId.ToLower() == id);
-                character.CurrentLevel = save != null ? Mathf.Max(save.level, 1) : 1;
-                character.ApplyCurrentStats();
-
-                // 저장 안 되어 있다면 등록
-                if (save == null)
-                {
-                    toSave.Add(new CharacterSaveData { characterId = character.name, level = 1 });
-                }
+                string json = request.downloadHandler.text;
+                CharacterLevelData levelData = JsonUtility.FromJson<CharacterLevelData>(json);
+                character.SetLevelData(levelData);
+            }
+            else
+            {
+                Debug.LogError($"[{character.name}] 스탯 JSON 로딩 실패: {request.error}");
             }
 
-            if (toSave.Count > 0)
-                PlayFabCharacterProgressService.Save(toSave);
+            // 저장된 캐릭터 찾기
+            var save = saveList.Find(s => s.characterId.ToLower() == id);
+            character.CurrentLevel = save != null ? Mathf.Max(save.level, 1) : 1;
+            character.ApplyCurrentStats();
 
-            CharacterManager.Instance.RefreshAllCharacterUI();
-            CharacterSelection.Instance.LoadAvailableCharacters();
-            PlayFabCharacterPlacementService.Load(() => { });
-        });
+            if (save == null)
+            {
+                toSave.Add(new CharacterSaveData { characterId = character.name, level = 1 });
+            }
+            else
+            {
+                toSave.Add(new CharacterSaveData { characterId = character.name, level = character.CurrentLevel });
+            }
+        }
+
+        if (toSave.Count > 0)
+            PlayFabCharacterProgressService.Save(toSave);
+
+        CharacterManager.Instance.RefreshAllCharacterUI();
+        CharacterSelection.Instance.LoadAvailableCharacters();
+        PlayFabCharacterPlacementService.Load(() => { });
     }
 }

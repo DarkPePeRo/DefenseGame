@@ -8,32 +8,42 @@ public class PlayFabCurrencyService
 {
     public static void Load(Action onComplete)
     {
-        PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result => {
-            bool isMissing = false;
-            var data = result.Data;
+        PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), result =>
+        {
+            var vc = result.VirtualCurrency;
 
-            if (data != null && data.ContainsKey("gold"))
-                PlayerCurrency.Instance.gold.amount = int.Parse(data["gold"].Value);
-            else { PlayerCurrency.Instance.gold.amount = 0; isMissing = true; }
+            // 골드 VC: "GD"
+            if (vc != null && vc.TryGetValue("GD", out int gd))
+            {
+                PlayerCurrency.Instance.gold.amount = gd;
+                Debug.Log("[Currency] 골드 불러오기 완료: " + gd);
+            }
+            else
+            {
+                PlayerCurrency.Instance.gold.amount = 0;
+                Debug.LogWarning("[Currency] 골드 정보 없음, 0으로 초기화");
+            }
 
-            if (data != null && data.ContainsKey("diamond"))
-                PlayerCurrency.Instance.diamond.amount = int.Parse(data["diamond"].Value);
-            else { PlayerCurrency.Instance.diamond.amount = 0; isMissing = true; }
-
-            if (isMissing) Save(PlayerCurrency.Instance.gold.amount, PlayerCurrency.Instance.diamond.amount);
+            // 다이아 VC: "DM"
+            if (vc != null && vc.TryGetValue("DM", out int dm))
+            {
+                PlayerCurrency.Instance.diamond.amount = dm;
+                Debug.Log("[Currency] 다이아 불러오기 완료: " + dm);
+            }
+            else
+            {
+                PlayerCurrency.Instance.diamond.amount = 0;
+                Debug.LogWarning("[Currency] 다이아 정보 없음, 0으로 초기화");
+            }
             onComplete?.Invoke();
         },
-        error => Debug.LogError("Currency 로드 실패: " + error.GenerateErrorReport()));
+        error =>
+        {
+            Debug.LogError("[Currency] 불러오기 실패: " + error.GenerateErrorReport());
+            onComplete?.Invoke();
+        });
     }
 
-    public static void Save(int gold, int diamond)
-    {
-        var data = new Dictionary<string, string> {
-            { "gold", gold.ToString() },
-            { "diamond", diamond.ToString() }
-        };
-        PlayFabClientAPI.UpdateUserData(new UpdateUserDataRequest { Data = data },
-            result => Debug.Log("Currency 저장 성공"),
-            error => Debug.LogError("Currency 저장 실패: " + error.GenerateErrorReport()));
-    }
+    // VC 기반에서는 직접 저장 호출은 거의 없음 → CloudScript 또는 자동 저장 사용
+    // 예: GrantGold / SpendGold 등
 }

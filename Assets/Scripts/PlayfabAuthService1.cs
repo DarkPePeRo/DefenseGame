@@ -1,8 +1,10 @@
-// ? 1. 로그인 및 초기화 담당: PlayFabAuthService.cs
+// ? Google 로그인 + PlayFab 연동 (Android 대응)
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
 using UnityEngine;
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
 
 public class PlayFabAuthService1 : MonoBehaviour
 {
@@ -17,35 +19,94 @@ public class PlayFabAuthService1 : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            PlayGamesClientConfiguration config = new PlayGamesClientConfiguration.Builder()
+                .RequestServerAuthCode(true) // 반드시 true여야 PlayFab 연동 가능
+                .Build();
+
+            PlayGamesPlatform.InitializeInstance(config);
+            PlayGamesPlatform.Activate();
         }
         else Destroy(gameObject);
     }
-
-    private void Start()
+    public void LoginWithCustomID()
     {
         PlayFabSettings.TitleId = "1FD00";
-        var request = new LoginWithCustomIDRequest { CustomId = SystemInfo.deviceUniqueIdentifier, CreateAccount = true };
+
+        // 1. PlayerPrefs에 저장된 UUID 사용하거나, 없으면 새로 생성
+        string customId;
+        if (PlayerPrefs.HasKey("custom_id"))
+        {
+            customId = PlayerPrefs.GetString("custom_id");
+        }
+        else
+        {
+            customId = Guid.NewGuid().ToString();
+            PlayerPrefs.SetString("custom_id", customId);
+            PlayerPrefs.Save();
+        }
+
+        var request = new LoginWithCustomIDRequest
+        {
+            CustomId = customId,
+            CreateAccount = true
+        };
+
         PlayFabClientAPI.LoginWithCustomID(request, OnLogin, OnError);
+    }
+
+
+    public void LoginWithGoogle()
+    {
+        Debug.Log("[Auth] Google 로그인 시도...");
+
+        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptAlways, (result) =>
+        {
+            if (result == SignInStatus.Success)
+            {
+                string serverAuthCode = PlayGamesPlatform.Instance.GetServerAuthCode();
+                Debug.Log("[Auth] GPGS 로그인 성공, AuthCode: " + serverAuthCode);
+
+                if (string.IsNullOrEmpty(serverAuthCode))
+                {
+                    Debug.LogError("[Auth] serverAuthCode가 비어있습니다. 설정 확인 필요.");
+                    return;
+                }
+
+                PlayFabClientAPI.LoginWithGooglePlayGamesServices(new LoginWithGooglePlayGamesServicesRequest
+                {
+                    TitleId = PlayFabSettings.TitleId,
+                    ServerAuthCode = serverAuthCode,
+                    CreateAccount = true
+                }, OnLogin, OnError);
+            }
+            else
+            {
+                Debug.LogError("[Auth] GPGS 로그인 실패: " + result);
+            }
+        });
     }
 
     private void OnLogin(LoginResult result)
     {
         PlayFabId = result.PlayFabId;
+        Debug.Log("[Auth] PlayFab 로그인 성공: " + PlayFabId);
         FetchDisplayName();
         OnLoginSuccess?.Invoke();
     }
 
     private void FetchDisplayName()
     {
-        PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest(), result => {
+        PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest(), result =>
+        {
             DisplayName = result.AccountInfo.TitleInfo.DisplayName;
             if (string.IsNullOrEmpty(DisplayName))
                 DisplayName = "User_" + PlayFabId.Substring(0, 5);
-        }, error => Debug.LogError("DisplayName 불러오기 실패: " + error.GenerateErrorReport()));
+        }, error => Debug.LogError("[Auth] DisplayName 불러오기 실패: " + error.GenerateErrorReport()));
     }
 
     private void OnError(PlayFabError error)
     {
-        Debug.LogError("PlayFab 로그인 실패: " + error.GenerateErrorReport());
+        Debug.LogError("[Auth] PlayFab 로그인 실패: " + error.GenerateErrorReport());
     }
 }

@@ -53,7 +53,7 @@ public class CurrencyUI : MonoBehaviour
     {
         while (currentGold != targetGold) // 목표 금액에 도달할 때까지 반복
         {
-            float duration = 0.3f;
+            float duration = 0.2f;
             float elapsed = 0f;
             int startGold = currentGold;
 
@@ -76,7 +76,7 @@ public class CurrencyUI : MonoBehaviour
     {
         while (currentDiamond != targetDiamond)
         {
-            float duration = 0.3f;
+            float duration = 0.2f;
             float elapsed = 0f;
             int startDiamond = currentDiamond;
 

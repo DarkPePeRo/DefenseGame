@@ -1,4 +1,3 @@
-// PlayFabStatsService.cs
 using System;
 using System.Collections.Generic;
 using PlayFab;
@@ -14,54 +13,31 @@ public static class PlayFabStatsService
 
     public static void Load(Action onComplete = null)
     {
-        PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result =>
+        PlayFabClientAPI.GetUserReadOnlyData(new GetUserDataRequest(), result =>
         {
             if (result.Data != null)
             {
-                if (result.Data.TryGetValue("attackPowerLevel", out var val))
-                    AttackPowerLevel = int.Parse(val.Value);
-                if (result.Data.TryGetValue("attackSpeedLevel", out val))
-                    AttackSpeedLevel = int.Parse(val.Value);
-                if (result.Data.TryGetValue("criticalRateLevel", out val))
-                    CriticalRateLevel = int.Parse(val.Value);
-                if (result.Data.TryGetValue("criticalDamageLevel", out val))
-                    CriticalDamageLevel = int.Parse(val.Value);
+                AttackPowerLevel = TryParseOrDefault(result.Data, "attackPower_Level", 1);
+                AttackSpeedLevel = TryParseOrDefault(result.Data, "attackSpeed_Level", 1);
+                CriticalRateLevel = TryParseOrDefault(result.Data, "criticalRate_Level", 1);
+                CriticalDamageLevel = TryParseOrDefault(result.Data, "criticalDamage_Level", 1);
 
-                Debug.Log("[PlayFabStatsService] 스탯 불러오기 완료");
+                Debug.Log("[PlayFabStatsService] ReadOnly 스탯 불러오기 완료");
             }
 
             onComplete?.Invoke();
-
-        }, error =>
+        },
+        error =>
         {
-            Debug.LogError("[PlayFabStatsService] 스탯 불러오기 실패: " + error.ErrorMessage);
+            Debug.LogError("[PlayFabStatsService] ReadOnly 스탯 불러오기 실패: " + error.GenerateErrorReport());
             onComplete?.Invoke();
         });
     }
 
-    public static void Save()
+    private static int TryParseOrDefault(Dictionary<string, UserDataRecord> data, string key, int defaultValue)
     {
-        var data = new Dictionary<string, string>
-        {
-            { "attackPowerLevel", AttackPowerLevel.ToString() },
-            { "attackSpeedLevel", AttackSpeedLevel.ToString() },
-            { "criticalRateLevel", CriticalRateLevel.ToString() },
-            { "criticalDamageLevel", CriticalDamageLevel.ToString() }
-        };
-
-        PlayFabClientAPI.UpdateUserData(new UpdateUserDataRequest { Data = data },
-            result => Debug.Log("[PlayFabStatsService] 스탯 저장 완료"),
-            error => Debug.LogError("[PlayFabStatsService] 스탯 저장 실패: " + error.ErrorMessage));
-    }
-
-    public static void SetStat(string type, int level)
-    {
-        switch (type)
-        {
-            case "attackPower": AttackPowerLevel = level; break;
-            case "attackSpeed": AttackSpeedLevel = level; break;
-            case "criticalRate": CriticalRateLevel = level; break;
-            case "criticalDamage": CriticalDamageLevel = level; break;
-        }
+        return data.TryGetValue(key, out var val) && int.TryParse(val.Value, out var result)
+            ? result
+            : defaultValue;
     }
 }

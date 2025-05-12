@@ -48,8 +48,8 @@ public class DemoPlayer : MonoBehaviour
 
         Initialize("Skeleton", monsterStatsLoader);
 
-        _animator.SetFloat(Horizontal, 1);
-        _animator.SetFloat(Vertical, 1);
+        _animator.SetFloat(Horizontal, 0);
+        _animator.SetFloat(Vertical, 0);
     }
 
     private void OnEnable()
@@ -111,7 +111,7 @@ public class DemoPlayer : MonoBehaviour
         else
         {
             objectPool.ReturnObject(gameObject);
-            currency.AddCurrency(currency.gold, waveSystem.GetGoldReward(), currency.diamond, 0);
+            currency.AddGoldBuffered(waveSystem.GetGoldReward());
             waveSystem.OnEnemyDefeated();
             hpBarSlider.gameObject.SetActive(false);
         }
@@ -142,6 +142,8 @@ public class DemoPlayer : MonoBehaviour
     {
         _playerRotation.x = normalizedDir.x > 0 ? 1 : -1;
         _playerRotation.y = normalizedDir.y > 0 ? 1 : -1;
+        _animator.SetFloat("Horizontal", _playerRotation.x);
+        _animator.SetFloat("Vertical", _playerRotation.y);
     }
     public void Initialize(string monsterName, MonsterStatsLoader statsLoader)
     {

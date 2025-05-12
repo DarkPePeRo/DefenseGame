@@ -1,49 +1,98 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEditor.Rendering;
 
 public class StatUpgradeUI : MonoBehaviour
 {
+    public enum StatType
+    {
+        attackPower,
+        attackSpeed,
+        criticalRate,
+        criticalDamage
+    }
+
+    public static StatUpgradeUI Instance;
+
     public GodStatManage statsManager;
-    public TextMeshProUGUI attackPowerLevelText, attackSpeedLevelText, criticalRateLevelText, criticalDamageLevelText;
-    public TextMeshProUGUI attackPowerText, attackSpeedText, criticalRateText, criticalDamageText;
-    public TextMeshProUGUI attackPowerGold, attackSpeedGold, criticalRateGold, criticalDamageGold;
-    public Button upgradeAttackPowerButton, upgradeAttackSpeedButton, upgradeCriticalRateButton, upgradeCriticalDamageButton;
-    public Button saveButton, loadButton;
+
+    [System.Serializable]
+    public class StatUIGroup
+    {
+        public StatType type;
+        public TextMeshProUGUI levelText;
+        public TextMeshProUGUI valueText;
+        public TextMeshProUGUI goldText;
+        public Button upgradeButton;
+        public Sprite normalSprite;
+        public Sprite maxedSprite;
+    }
+
+    public StatUIGroup[] statUIGroups;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else Destroy(gameObject);
+    }
 
     private void Start()
     {
         statsManager = FindObjectOfType<GodStatManage>();
 
-        upgradeAttackPowerButton.onClick.AddListener(() => UpgradeStat("attackPower"));
-        upgradeAttackSpeedButton.onClick.AddListener(() => UpgradeStat("attackSpeed"));
-        upgradeCriticalRateButton.onClick.AddListener(() => UpgradeStat("criticalRate"));
-        upgradeCriticalDamageButton.onClick.AddListener(() => UpgradeStat("criticalDamage"));
+        foreach (var group in statUIGroups)
+        {
+            var capturedGroup = group; // for closure
+            group.upgradeButton.onClick.AddListener(() => OnClickUpgrade(capturedGroup.type));
+        }
 
         UpdateUI();
     }
 
-    private void UpgradeStat(string statType)
+    private void OnClickUpgrade(StatType type)
     {
-        statsManager.LevelUp(statType);
+        statsManager.RequestLevelUp(type.ToString());
         UpdateUI();
     }
 
-    private void UpdateUI()
+    public void UpdateUI()
     {
-        attackPowerLevelText.text = "Lv. " + statsManager.attackPowerLevel;
-        attackSpeedLevelText.text = "Lv. " + statsManager.attackSpeedLevel;
-        criticalRateLevelText.text = "Lv. " + statsManager.criticalRateLevel;
-        criticalDamageLevelText.text = "Lv. " + statsManager.criticalDamageLevel;
+        foreach (var group in statUIGroups)
+        {
+            int level = statsManager.GetCurrentLevel(group.type.ToString());
+            float value = statsManager.GetStatValue(group.type.ToString());
+            int gold = statsManager.GetStatGold(group.type.ToString());
 
-        attackPowerText.text = "" + statsManager.attackPower;
-        attackSpeedText.text = "" + statsManager.attackSpeed;
-        criticalRateText.text = "" + statsManager.criticalRate;
-        criticalDamageText.text = "" + statsManager.criticalDamage;
-
-        attackPowerGold.text = "" + statsManager.attackPowerGold;
-        attackSpeedGold.text = "" + statsManager.attackSpeedGold;
-        criticalRateGold.text = "" + statsManager.criticalRateGold;
-        criticalDamageGold.text = "" + statsManager.criticalDamageGold;
+            group.levelText.text = $"Lv. {level}";
+            group.valueText.text = $"{value}";
+            group.goldText.text = $"{gold}";
+            if (group.type == StatType.criticalRate) 
+            {
+                group.valueText.text = $"{value} %";
+            }
+            if (group.type == StatType.criticalDamage)
+            {
+                group.valueText.text = $"{value} %";
+            }
+            if (PlayerCurrency.Instance.gold.amount < gold)
+            {
+                group.upgradeButton.image.sprite = group.maxedSprite;
+            }
+            bool isMaxed = statsManager.IsMaxLevel(group.type.ToString());
+            group.upgradeButton.interactable = !isMaxed;
+            if (isMaxed)
+            {
+                group.goldText.text = "최대 레벨";
+                group.goldText.fontSize = 40;
+                group.goldText.color = Color.black;
+            }
+            if (group.maxedSprite != null && group.normalSprite != null)
+                group.upgradeButton.image.sprite = isMaxed ? group.maxedSprite : group.normalSprite;
+        }
     }
 }

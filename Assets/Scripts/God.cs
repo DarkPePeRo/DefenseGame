@@ -1,8 +1,11 @@
 using PlayFab.GroupsModels;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.Linq;
+
 
 public class God : MonoBehaviour
 {
@@ -16,9 +19,13 @@ public class God : MonoBehaviour
     public Collider2D[] colliders;
     public Collider2D shortEnemy;
     public GameObject shortEnemyObject;
+    public float range = 3f; // 마름모 범위
+    public Collider2D[] candidates;
 
     public float width;
     public float height;
+    public float tileWidth = 5.12f;
+    public float tileHeight = 2.56f;
 
     public GameObject godDetailUI;
 
@@ -34,10 +41,39 @@ public class God : MonoBehaviour
         timer += Time.deltaTime;
         if (timer > shotDelay - 0.1f)
         {
-            colliders = Physics2D.OverlapAreaAll(
-            new Vector2(transform.position.x - width / 2, transform.position.y - height / 2),
-            new Vector2(transform.position.x + width / 2, transform.position.y + height / 2),
-            layer);
+            List<Collider2D> result = new List<Collider2D>();
+            Vector2 center = transform.position;
+
+            // 마름모 꼭짓점 4개 계산
+            Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
+            Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
+            Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
+            Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
+
+            // 마름모를 폴리곤으로 정의
+            Vector2[] diamond = new Vector2[] { top, right, bottom, left };
+
+            // 넓은 후보 영역 감지 (이소메트릭이더라도 먼저 원형으로 뽑음)
+            candidates = Physics2D.OverlapCircleAll(center, range, layer);
+            // 유닛 위치가 마름모 안에 있는지 검사
+            if (candidates != null)
+            {
+                foreach (var c in candidates)
+                {
+                    if (!c.gameObject.activeInHierarchy)
+                        continue;
+                    Vector2 p = c.bounds.center;
+
+                    if (IsPointInPolygon(p, diamond))
+                    {
+                        result.Add(c);
+                        colliders = result.ToArray();
+                    }
+                }
+
+            }
+            else { colliders = new Collider2D[0]; }
+            colliders = colliders.Where(c => c != null && c.gameObject.activeInHierarchy).ToArray();
         }
         if (timer > shotDelay)
         {
@@ -46,17 +82,6 @@ public class God : MonoBehaviour
                 shortEnemy = colliders[colliders.Length - 1];
                 shortEnemyObject = shortEnemy.gameObject;
                 GameObject thunder = objectPool.GetObject("Thunder");
-                //float short_distance = Vector3.Distance(transform.position, colliders[0].transform.position);
-                //foreach (Collider2D col in colliders)
-                //{
-                //    float short_distance2 = Vector3.Distance(transform.position, col.transform.position);
-                //    if (short_distance > short_distance2)
-                //    {
-                //        short_distance = short_distance2;
-                //        shortEnemy = col;
-                //        shortEnemyObject = shortEnemy.gameObject;
-                //    }
-                //}
                 if (shortEnemyObject.transform.position.x < transform.position.x)
                 {
                     transform.localScale = new Vector3(-0.6f, 0.6f, 1);
@@ -66,35 +91,60 @@ public class God : MonoBehaviour
                     transform.localScale = new Vector3(0.6f, 0.6f, 1);
                 }
             }
+            else
+            {
+                shortEnemyObject = null;
+            }
             timer = 0;
         }
     }
 
-    public void FindClosestTarget()
-    {
-
-    }
-
     private void OnDrawGizmos()
     {
-        // 사각형의 네 꼭짓점 계산
-        Vector2 bottomLeft = new Vector2(transform.position.x - width / 2, transform.position.y - height / 2);
-        Vector2 bottomRight = new Vector2(transform.position.x + width / 2, transform.position.y - height / 2);
-        Vector2 topLeft = new Vector2(transform.position.x - width / 2, transform.position.y + height / 2);
-        Vector2 topRight = new Vector2(transform.position.x + width / 2, transform.position.y + height / 2);
+        Vector2 center = transform.position;
 
-        // 기즈모 색상 설정
-        Gizmos.color = Color.red;
+        // 마름모 꼭짓점 계산
+        Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
+        Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
+        Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
+        Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
 
-        // 사각형 그리기 (네 변을 선으로 연결)
-        Gizmos.DrawLine(bottomLeft, bottomRight);
-        Gizmos.DrawLine(bottomRight, topRight);
-        Gizmos.DrawLine(topRight, topLeft);
-        Gizmos.DrawLine(topLeft, bottomLeft);
+        // 마름모 선 그리기
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(top, right);
+        Gizmos.DrawLine(right, bottom);
+        Gizmos.DrawLine(bottom, left);
+        Gizmos.DrawLine(left, top);
     }
 
-    private void OnMouseDown()
+
+    Vector2 WorldToIsoOffset(Vector2 delta)
     {
-        
+        float isoX = (delta.x / tileWidth + delta.y / tileHeight) * 0.5f;
+        float isoY = (delta.y / tileHeight - delta.x / tileWidth) * 0.5f;
+        return new Vector2(isoX, isoY);
     }
+    Vector2 IsoOffsetToWorld(int x, int y)
+    {
+        return new Vector2(
+            (x - y) * tileWidth * 0.5f,
+            (x + y) * tileHeight * 0.5f
+        );
+    }
+    bool IsPointInPolygon(Vector2 p, Vector2[] poly)
+    {
+        int count = poly.Length;
+        bool inside = false;
+
+        for (int i = 0, j = count - 1; i < count; j = i++)
+        {
+            if ((poly[i].y > p.y) != (poly[j].y > p.y) &&
+                p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
+            {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
 }

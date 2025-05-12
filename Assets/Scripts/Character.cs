@@ -30,36 +30,6 @@ public partial class Character : MonoBehaviour
     {
         name = gameObject.name; // Character.name과 GameObject.name 동기화
     }
-    public void LevelUp()
-    {
-        if (levelStats == null || CurrentLevel >= levelStats.Count)
-        {
-            Debug.LogWarning($"[{name}] 이미 최대 레벨입니다.");
-            return;
-        }
-
-        var next = levelStats.Find(l => l.level == CurrentLevel + 1);
-        if (next == null)
-        {
-            Debug.LogError($"[{name}] 다음 레벨 데이터를 찾을 수 없습니다.");
-            return;
-        }
-
-        if (PlayerCurrency.Instance.gold.amount < next.goldRequired)
-        {
-            Debug.LogWarning($"[{name}] 골드 부족: 필요 {next.goldRequired}, 보유 {PlayerCurrency.Instance.gold.amount}");
-            return;
-        }
-
-        PlayerCurrency.Instance.SpendCurrency(PlayerCurrency.Instance.gold, next.goldRequired);
-
-        CurrentLevel = next.level;
-        ApplyCurrentStats();
-        //PlayFabCharacterProgressService.UpdateLevel(name, CurrentLevel);
-
-        Debug.Log($"[{name}] 레벨업 완료 → Lv.{CurrentLevel}");
-    }
-
     public void ApplyCurrentStats()
     {
         if (levelStats == null) return;
@@ -77,9 +47,9 @@ public partial class Character : MonoBehaviour
     }
 
     public int CurrentLevel { get; set; } = 1;
-    public float CurrentAttackPower { get; private set; }
-    public float CurrentAttackSpeed { get; private set; }
-    public int GoldRequiredForNext { get; private set; }
+    public float CurrentAttackPower { get; set; }
+    public float CurrentAttackSpeed { get; set; }
+    public int GoldRequiredForNext { get; set; }
 
 
 }

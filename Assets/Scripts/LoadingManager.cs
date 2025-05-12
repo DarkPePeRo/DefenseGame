@@ -40,7 +40,7 @@ public class LoadingManager : MonoBehaviour
         // 데이터 순차 로드
         PlayFabCurrencyService.Load(() =>
         {
-            PlayFabStageService.Load(stageData =>
+            PlayFabStageService.Load((clearedStages, highestStage) =>
             {
                 PlayFabStatsService.Load(() =>
                 {

@@ -98,7 +98,7 @@ public class Boss : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            currency.AddCurrency(currency.gold, waveSystem.GetGoldReward(), currency.diamond, 0);
+            currency.AddGoldBuffered(waveSystem.GetGoldReward());
         }
     }
 

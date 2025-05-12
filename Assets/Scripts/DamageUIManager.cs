@@ -17,7 +17,7 @@ public class DamageUIManager : MonoBehaviour
         TextMeshProUGUI damageText = damageTextInstance.GetComponentInChildren<TextMeshProUGUI>();
         if (damageText != null)
         {
-            damageText.text = damageAmount.ToString();
+            damageText.text = FormatDamage(damageAmount);
         }
 
         // 데미지 텍스트를 카메라를 향하게 회전
@@ -45,4 +45,14 @@ public class DamageUIManager : MonoBehaviour
 
         Destroy(damageTextInstance); // 애니메이션 종료 후 텍스트 제거
     }
+    private string FormatDamage(float damage)
+    {
+        if (damage >= 1_000_000)
+            return $"{(damage / 1_000_000f):0.#}m";
+        else if (damage >= 1_000)
+            return $"{(damage / 1_000f):0.#}k";
+        else
+            return damage.ToString("0");
+    }
+
 }

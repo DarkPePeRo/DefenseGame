@@ -40,7 +40,7 @@ public class WaveSystem : MonoBehaviour
         bossCanvasGroup = bossUI.GetComponent<CanvasGroup>();
         boss = BossPrefab.GetComponent<Boss>();
 
-        PlayFabStageService.Load(loadedStages => {
+        PlayFabStageService.Load((loadedStages, highestStage) => {
             if (loadedStages.Count > 0)
                 currentWave = loadedStages[loadedStages.Count - 1];
             StartWave();
@@ -64,7 +64,7 @@ public class WaveSystem : MonoBehaviour
     public void StartWave()
     {
         pool.ReturnAllObjects();
-        enemyCountPerWave = requiredEnemies + currentWave;
+        enemyCountPerWave = requiredEnemies;
         enemyCount = enemyCountPerWave;
         isBossSpawned = false;
         stage.text = "Stage : " + currentWave.ToString();
@@ -106,27 +106,23 @@ public class WaveSystem : MonoBehaviour
             StartCoroutine(FadeInBossUI());
         }
     }
-
     public void OnBossDefeated()
     {
         currentWave++;
-        PlayFabStageService.Load(stages => {
-            if (!stages.Contains(currentWave))
-                stages.Add(currentWave);
-            PlayFabStageService.Save(stages);
-        });
+
+        PlayFabStageService.RequestStageClear(currentWave); // 서버 검증 요청
 
         spawn.currentSpawnCount = 0;
         bossHPUI.SetActive(false);
         StartCoroutine(FadeInWinUI());
         StartWave();
         isBossSpawned = false;
-        PlayerCurrency.Instance.AddCurrency(PlayerCurrency.Instance.gold, 0, PlayerCurrency.Instance.diamond, 500);
     }
 
     void SpawnBoss()
     {
-        GameObject bossObject = Instantiate(BossPrefab, spawn.transform.position, Quaternion.identity);
+        GameObject bossObject = Instantiate(BossPrefab);
+        bossObject.transform.position = spawn.spawnPoints[spawn.currentIndex % currentWave].position;
         boss = bossObject.GetComponent<Boss>();
         Debug.Log("BossSpawn");
         bossHPUI.SetActive(true);
