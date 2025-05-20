@@ -42,7 +42,7 @@ public class LoadingManager : MonoBehaviour
         {
             PlayFabStageService.Load((clearedStages, highestStage) =>
             {
-                PlayFabStatsService.Load(() =>
+                PlayFabGodStatService.Load(() =>
                 {
                     isDataLoaded = true;
                 });

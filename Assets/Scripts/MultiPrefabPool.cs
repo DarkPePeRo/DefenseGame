@@ -65,6 +65,19 @@ public class MultiPrefabPool : MonoBehaviour
                 Debug.LogWarning($"Monster stat not found for {tag}");
             }
         }
+        Wolf wolf = objectToSpawn.GetComponent<Wolf>();
+        if (wolf != null)
+        {
+            MonsterStat stat = statsLoader.GetMonsterStatByName(tag);
+            if (stat != null)
+            {
+                wolf.SetStats(stat); // DemoPlayer에서 스탯 설정 메서드 호출
+            }
+            else
+            {
+                Debug.LogWarning($"Monster stat not found for {tag}");
+            }
+        }
         return objectToSpawn;
     }
 

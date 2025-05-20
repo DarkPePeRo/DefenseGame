@@ -29,7 +29,7 @@ public class Spawn : MonoBehaviour
         currentSpawnCount = Mathf.Max(0, currentSpawnCount - 1);
     }
 
-    public IEnumerator SpawnEnemy()
+    public IEnumerator SpawnEnemy(string enemy)
     {
         float nextSpawnTime = Time.time;
 
@@ -46,7 +46,7 @@ public class Spawn : MonoBehaviour
             {
                 if (currentSpawnCount < maxSpawnCount)
                 {
-                    GameObject monster = objectPool.GetObject("Skeleton");
+                    GameObject monster = objectPool.GetObject(enemy);
 
                     if (monster != null && spawnPoints.Count > 0)
                     {

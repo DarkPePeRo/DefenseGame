@@ -52,6 +52,12 @@ public class ArrowShooting : MonoBehaviour
             targetdir = target.GetComponent<DemoPlayer>().dir;
             StartCoroutine(IEFlight());
         }
+        if (target.tag == "Wolf")
+        {
+            previousPosition = transform.position;
+            targetdir = target.GetComponent<Wolf>().dir;
+            StartCoroutine(IEFlight());
+        }
         if(target.tag == "Boss")
         {
             previousPosition = transform.position;
@@ -165,6 +171,23 @@ public class ArrowShooting : MonoBehaviour
         if (target.tag == "Enemy")
         {
             DemoPlayer targetPlayer = target.GetComponent<DemoPlayer>();
+            if (targetPlayer != null)
+            {
+                if (targetPlayer.CurrentHP > 0)
+                {
+                    targetPlayer.CurrentHP -= damage;
+                    if (isCritical == true)
+                    {
+                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
+                    }
+                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
+                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
+                }
+            }
+        }
+        if (target.tag == "Wolf")
+        {
+            Wolf targetPlayer = target.GetComponent<Wolf>();
             if (targetPlayer != null)
             {
                 if (targetPlayer.CurrentHP > 0)

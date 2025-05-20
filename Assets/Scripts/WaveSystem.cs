@@ -72,7 +72,8 @@ public class WaveSystem : MonoBehaviour
         if (enemyCount > 0)
         {
             Debug.Log("EnemySpawn");
-            spawn.StartCoroutine("SpawnEnemy");
+            spawn.StartCoroutine(spawn.SpawnEnemy("Skeleton"));
+            spawn.StartCoroutine(spawn.SpawnEnemy("Wolf"));
         }
     }
 
@@ -81,7 +82,8 @@ public class WaveSystem : MonoBehaviour
         Debug.Log("Again");
         pool.ReturnAllObjects();
         StartCoroutine(FadeInDefeatedUI());
-        spawn.StopCoroutine("SpawnEnemy");
+        spawn.StopCoroutine(spawn.SpawnEnemy("Skeleton"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("Wolf"));
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
         currentWave--;
@@ -90,7 +92,8 @@ public class WaveSystem : MonoBehaviour
 
     public void AgainWaveCharacterChanged()
     {
-        spawn.StopCoroutine("SpawnEnemy");
+        spawn.StopCoroutine(spawn.SpawnEnemy("Skeleton"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("Wolf"));
         pool.ReturnAllObjects();
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;

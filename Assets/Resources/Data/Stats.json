@@ -27,6 +27,13 @@
         "attack": 100,
         "defense": 5,
         "gold" : 10000
-    }
+    },
+    {
+      "name": "Wolf",
+      "hp": 10000,
+      "attack": 100,
+      "defense": 5,
+      "gold" : 10000
+  }
   ]
 }

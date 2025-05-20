@@ -73,6 +73,13 @@ public class Thunder : MonoBehaviour
             transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.8f, 0);
             StartCoroutine(ThunderAttack());
         }
+        if (target.tag == "Wolf")
+        {
+            previousPosition = transform.position;
+            targetdir = target.GetComponent<Wolf>().dir;
+            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.8f, 0);
+            StartCoroutine(ThunderAttack());
+        }
         if (target.tag == "Boss")
         {
             previousPosition = transform.position;
@@ -124,6 +131,18 @@ public class Thunder : MonoBehaviour
         if (target.tag == "Enemy")
         {
             DemoPlayer targetPlayer = target.GetComponent<DemoPlayer>();
+            if (targetPlayer != null)
+            {
+                if (targetPlayer.CurrentHP > 0)
+                {
+                    targetPlayer.CurrentHP -= damage;
+                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
+                }
+            }
+        }
+        if (target.tag == "Wolf")
+        {
+            Wolf targetPlayer = target.GetComponent<Wolf>();
             if (targetPlayer != null)
             {
                 if (targetPlayer.CurrentHP > 0)

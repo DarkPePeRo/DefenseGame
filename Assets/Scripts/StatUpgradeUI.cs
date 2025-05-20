@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEditor.Rendering;
+using static StatUpgradeUI;
 
 public class StatUpgradeUI : MonoBehaviour
 {
@@ -56,7 +57,7 @@ public class StatUpgradeUI : MonoBehaviour
 
     private void OnClickUpgrade(StatType type)
     {
-        statsManager.RequestLevelUp(type.ToString());
+        statsManager.StartStatLevelUpLoop(type.ToString());
         UpdateUI();
     }
 
