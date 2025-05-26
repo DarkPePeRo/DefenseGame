@@ -48,12 +48,23 @@ public class StatUpgradeUI : MonoBehaviour
 
         foreach (var group in statUIGroups)
         {
-            var capturedGroup = group; // for closure
-            group.upgradeButton.onClick.AddListener(() => OnClickUpgrade(capturedGroup.type));
+            var capturedGroup = group;
+
+            // 1. StatUpgradeButton 컴포넌트 추가
+            var statBtn = group.upgradeButton.gameObject.GetComponent<StatUpgradeButton>();
+            if (statBtn == null)
+                statBtn = group.upgradeButton.gameObject.AddComponent<StatUpgradeButton>();
+
+            // 2. statType 지정
+            statBtn.statType = capturedGroup.type.ToString();
+
+            // 3. 클릭 이벤트 제거 (연속/단일 모두 StatUpgradeButton에서 처리하므로 불필요)
+            group.upgradeButton.onClick.RemoveAllListeners();
         }
 
         UpdateUI();
     }
+
 
     private void OnClickUpgrade(StatType type)
     {

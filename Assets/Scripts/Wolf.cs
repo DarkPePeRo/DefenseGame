@@ -63,7 +63,7 @@ public class Wolf : MonoBehaviour
         _animator.SetFloat(Vertical, 1);
         if (hpBarSlider == null)
         {
-            GameObject hpBarInstance = Instantiate(hpBarPrefab, transform.position + new Vector3(0, 0.66f, 0), Quaternion.identity, this.transform);
+            GameObject hpBarInstance = Instantiate(hpBarPrefab, transform.position + new Vector3(0, 1f, 0), Quaternion.identity, this.transform);
             hpBarSlider = hpBarInstance.GetComponentInChildren<Slider>();
             hpBarTransform = hpBarInstance.transform;
         }
@@ -104,7 +104,9 @@ public class Wolf : MonoBehaviour
         }
         UpdateParamsIfNeeded();
         PlayerDir();
-        if (CurrentHP < MaxHP) hpBarSlider.gameObject.SetActive(true);
+        if (CurrentHP < MaxHP) {
+            hpBarSlider.gameObject.SetActive(true);
+            };
         if (CurrentHP > 0)
         {
             UpdateHpBar();
@@ -127,7 +129,7 @@ public class Wolf : MonoBehaviour
             _animator.SetFloat("Horizontal", _playerRotation.x);
             _animator.SetFloat("Vertical", _playerRotation.y);
             Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * (_playerRotation.x > 0 ? 1 : -1);
+            scale.x = Mathf.Abs(scale.x) * (_playerRotation.x > 0 ? -1 : 1);
             transform.localScale = scale;
             Debug.Log("turn");
 

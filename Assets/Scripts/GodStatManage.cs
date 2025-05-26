@@ -89,10 +89,12 @@ public class GodStatManage : MonoBehaviour
         }
     }
 
-    [SerializeField] private float continuousInterval = 0.1f;
 
     private IEnumerator LevelUpLoop()
     {
+        float interval = 0.3f;            // 시작 간격
+        const float minInterval = 0.05f;  // 최소 간격
+        const float speedUpRate = 0.95f;  // 반복할수록 줄어드는 비율
         while (true)
         {
             yield return PerformLevelUp(currentLoopStatType);
@@ -104,7 +106,11 @@ public class GodStatManage : MonoBehaviour
             if (next == null || PlayerCurrency.Instance.gold.amount < next.goldRequired)
                 break;
 
-            yield return new WaitForSeconds(continuousInterval);
+            yield return new WaitForSeconds(interval);
+
+            // 속도 점점 빨라짐
+            interval *= speedUpRate;
+            if (interval < minInterval) interval = minInterval;
         }
 
         levelUpLoopCoroutine = null;

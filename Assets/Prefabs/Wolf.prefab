@@ -557,7 +557,7 @@ MonoBehaviour:
   spawn: {fileID: 0}
   monsterStatsLoader: {fileID: 0}
   waveSystem: {fileID: 0}
-  hpBarPrefab: {fileID: 6800500202735510327, guid: 4bd1fb9838fc2f5408772bdfaf806dcb, type: 3}
+  hpBarPrefab: {fileID: 6800500202735510327, guid: 5c3813c100fbab44c990ad4946f4ae2c, type: 3}
   hpBarSlider: {fileID: 0}
   _playerRotation: {x: 1, y: 1}
   _animator: {fileID: 0}
