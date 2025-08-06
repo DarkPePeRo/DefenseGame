@@ -53,7 +53,7 @@ public class God : MonoBehaviour
             // 마름모를 폴리곤으로 정의
             Vector2[] diamond = new Vector2[] { top, right, bottom, left };
 
-            // 넓은 후보 영역 감지 (이소메트릭이더라도 먼저 원형으로 뽑음)
+            // 넓은 후보 영역 감지 (아이소메트릭이더라도 먼저 원형으로 뽑음)
             candidates = Physics2D.OverlapCircleAll(center, range, layer);
             // 유닛 위치가 마름모 안에 있는지 검사
             if (candidates != null)

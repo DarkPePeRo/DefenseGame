@@ -35,7 +35,7 @@ public class Wolf : MonoBehaviour
     private void Awake()
     {
         objectPool = GameObject.Find("PoolManager")?.GetComponent<MultiPrefabPool>();
-        currency = GameObject.Find("CurrencyManager")?.GetComponent<PlayerCurrency>();
+        currency = GameObject.Find("PlayerCurrency")?.GetComponent<PlayerCurrency>();
         spawn = GameObject.Find("Spawn")?.GetComponent<Spawn>();
         monsterStatsLoader = GameObject.Find("StatLoader")?.GetComponent<MonsterStatsLoader>();
         _animator = GetComponent<Animator>();

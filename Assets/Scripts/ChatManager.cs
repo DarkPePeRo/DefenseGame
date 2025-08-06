@@ -10,6 +10,8 @@ using System;
 
 public class ChatManager : MonoBehaviour
 {
+    public static ChatManager Instance;
+
     public TMP_InputField chatInputField;
     public Button sendButton;
     public Transform chatContent;
@@ -42,16 +44,20 @@ public class ChatManager : MonoBehaviour
         public DateTime sentTime;
     }
     private List<ChatTimeData> activeTimeTexts = new List<ChatTimeData>();
-
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
     void Start()
     {
         chatInputField.characterLimit = 60;
-        sendButton.onClick.AddListener(SendChatMessage);
         chatCanvasGroup = chatUI.GetComponent<CanvasGroup>();
         chatHomeCanvasGroup = chatHome.GetComponent<CanvasGroup>();
         chatInputField.onSubmit.AddListener(delegate { SendChatMessage(); });
         StartCoroutine(UpdateChatTimesLoop());
-        PlayFabChatService.Instance.OnMessageReceived += AppendChatMessage;
+        SignalRClient.Instance.OnMessageReceived += AppendChatMessage;
+        sendButton.onClick.AddListener(SendChatMessage);
     }
 
     void Update()
@@ -241,13 +247,13 @@ public class ChatManager : MonoBehaviour
     {
         if (!string.IsNullOrWhiteSpace(chatInputField.text))
         {
-            string message = $"[ {PlayFabAuthService1.Instance.DisplayName} ] {chatInputField.text}";
-            PlayFabChatService.Instance.SendChatMessage(message);
+            SignalRClient.Instance.SendChatMessage(chatInputField.text);
             chatInputField.text = "";
         }
 
         chatInputField.ActivateInputField();
     }
+
 
     public void AppendChatMessage(string message)
     {

@@ -5,6 +5,7 @@ using System;
 using UnityEngine;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
+using PlayFab.AuthenticationModels;
 
 public class PlayFabAuthService1 : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class PlayFabAuthService1 : MonoBehaviour
     public Action OnLoginSuccess;
     public string PlayFabId { get; private set; }
     public string DisplayName { get; private set; }
+    public string EntityToken { get; private set; }
 
     private void Awake()
     {
@@ -52,7 +54,23 @@ public class PlayFabAuthService1 : MonoBehaviour
             CreateAccount = true
         };
 
-        PlayFabClientAPI.LoginWithCustomID(request, OnLogin, OnError);
+        PlayFabClientAPI.LoginWithCustomID(request, result =>
+        {
+            PlayFabAuthenticationAPI.GetEntityToken(new GetEntityTokenRequest
+            {
+                AuthenticationContext = result.AuthenticationContext
+            }, tokenResult =>
+            {
+                EntityToken = tokenResult.EntityToken;
+                Debug.Log("EntityToken 성공: " + EntityToken);
+                OnLoginSuccess?.Invoke();
+            }, error =>
+            {
+                Debug.LogError("EntityToken 실패: " + error.GenerateErrorReport());
+            });
+
+            PlayFabId = result.PlayFabId;
+        }, OnError);
     }
 
 
@@ -78,7 +96,10 @@ public class PlayFabAuthService1 : MonoBehaviour
                     TitleId = PlayFabSettings.TitleId,
                     ServerAuthCode = serverAuthCode,
                     CreateAccount = true
-                }, OnLogin, OnError);
+                }, result => {
+                    OnLogin(result);
+                    RequestEntityToken();
+                }, OnError);
             }
             else
             {
@@ -94,8 +115,22 @@ public class PlayFabAuthService1 : MonoBehaviour
         FetchDisplayName();
         OnLoginSuccess?.Invoke();
     }
+    private void RequestEntityToken()
+    {
+        PlayFabAuthenticationAPI.GetEntityToken(new GetEntityTokenRequest
+        {
+            AuthenticationContext = PlayFabSettings.staticPlayer
+        }, result =>
+        {
+            EntityToken = result.EntityToken;
+            Debug.Log("EntityToken: " + EntityToken);
+        }, error =>
+        {
+            Debug.LogError("EntityToken 요청 실패: " + error.GenerateErrorReport());
+        });
+    }
 
-    private void FetchDisplayName()
+    public void FetchDisplayName()
     {
         PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest(), result =>
         {

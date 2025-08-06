@@ -3,9 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 using TMPro;
+using UnityEngine.UI;
 
 public class ButtonManager : MonoBehaviour
 {
+    public static ButtonManager Instance;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     public CharacterManager characterManager;
     public GameObject shopUI;
     private CanvasGroup shopCanvasGroup;
@@ -17,6 +26,13 @@ public class ButtonManager : MonoBehaviour
     private CanvasGroup godCanvasGroup;
     public GameObject towerUI;
     private CanvasGroup towerCanvasGroup;
+    public GameObject[] towerDetailUI;
+    private CanvasGroup[] towerDetailCanvasGroup;
+    public Sprite[] sprites;
+    public GameObject BossUI;
+    public GameObject Blocker;
+    private Button blockerButton;
+    bool isBossClicked = false;
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +42,14 @@ public class ButtonManager : MonoBehaviour
         characterCanvasGroup = characterUI.GetComponent<CanvasGroup>();
         godCanvasGroup = godUI.GetComponent<CanvasGroup>();
         towerCanvasGroup = towerUI.GetComponent<CanvasGroup>();
+        // UI 배열 크기만큼 CanvasGroup 배열 생성
+        towerDetailCanvasGroup = new CanvasGroup[towerDetailUI.Length];
+
+        for (int i = 0; i < towerDetailUI.Length; i++)
+        {
+            towerDetailCanvasGroup[i] = towerDetailUI[i].GetComponent<CanvasGroup>();
+        }
+        blockerButton = Blocker.GetComponent<Button>();
     }
 
     // Update is called once per frame
@@ -33,7 +57,23 @@ public class ButtonManager : MonoBehaviour
     {
         
     }
+    public void BossUIColor()
+    {
+        if (isBossClicked) {
+            isBossClicked = !isBossClicked;
+            BossUI.GetComponent<Image>().sprite = sprites[0];
+            BossUI.GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            BossUI.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1);
+        }
+        else
+        {
+            isBossClicked = !isBossClicked;
+            BossUI.GetComponent<Image>().sprite = sprites[1];
+            BossUI.GetComponent<Image>().color = new Color(171/255f, 171/255f, 171/255f, 1);
+            BossUI.GetComponent<RectTransform>().localScale = new Vector3(0.9f, 0.9f, 1);
 
+        }
+    }
     public void OnShop()
     {
         Debug.Log("Shop");
@@ -83,6 +123,16 @@ public class ButtonManager : MonoBehaviour
     public void OffTower()
     {
         StartCoroutine(FadeOutTowerUI());
+    }
+    public void OnTowerDetail(string name)
+    {
+        Debug.Log("Detail");
+        StartCoroutine(FadeInTowerDetailUI(name));
+
+    }
+    public void OffTowerDetail(string name)
+    {
+        StartCoroutine(FadeOutTowerDetailUI(name));
     }
     public void HomeButton()
     {
@@ -261,6 +311,93 @@ public class ButtonManager : MonoBehaviour
             }
 
             towerUI.SetActive(false); // UI 비활성화
+        }
+    }
+    private IEnumerator FadeInTowerDetailUI(string name)
+    {
+        int a = 0;
+        switch (name)
+        {
+            case "house":
+                a = 0;
+                break;
+            case "mill":
+                a = 1;
+                break;
+            
+        }
+        if (towerDetailCanvasGroup[a] != null)
+        {
+            towerDetailUI[a].SetActive(true);
+            Blocker.SetActive(true);
+
+            blockerButton.onClick.RemoveAllListeners(); // 기존 리스너 제거
+            blockerButton.onClick.AddListener(() => OffTowerDetail(name));
+
+            float duration = 0.3f;
+            float elapsed = 0f;
+
+            RectTransform rect = towerDetailUI[a].GetComponent<RectTransform>();
+            Vector2 targetPos = Vector2.zero; // 원래 위치
+            Vector2 startPos = targetPos + new Vector2(100f, 0f); // 오른쪽에서 등장
+
+            rect.anchoredPosition = startPos;
+            towerDetailCanvasGroup[a].alpha = 0f;
+
+            // 부드러운 이동 + 튕김 효과 수동 구현
+            AnimationCurve slideCurve = new AnimationCurve(
+                new Keyframe(0f, 0f),
+                new Keyframe(0.8f, 1.1f),
+                new Keyframe(1f, 1f)
+            );
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+
+                float curvedT = slideCurve.Evaluate(t);
+
+                rect.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, curvedT);
+                towerDetailCanvasGroup[a].alpha = t;
+
+                yield return null;
+            }
+
+            // 보정 (정확한 위치/알파 설정)
+            rect.anchoredPosition = targetPos;
+            towerDetailCanvasGroup[a].alpha = 1f;
+        }
+    }
+
+    private IEnumerator FadeOutTowerDetailUI(string name)
+    {
+        int a = 0;
+        switch (name)
+        {
+            case "house":
+                a = 0;
+                break;
+            case "mill":
+                a = 1;
+                break;
+
+        }
+        if (towerDetailCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                towerDetailCanvasGroup[a].alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            towerDetailUI[a].SetActive(false); // UI 비활성화
+            Blocker.SetActive(false);
+            blockerButton.onClick.RemoveAllListeners();
         }
     }
 }

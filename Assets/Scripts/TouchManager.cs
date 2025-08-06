@@ -1,7 +1,8 @@
-// Unity 2D 모바일 게임용 카메라 터치 컨트롤 (매끄러운 버전)
-using Unity.VisualScripting;
+// Unity 2D 모바일 카메라 터치 + 포커스 + UI 락 + 트윈 + 콜백 통합 컨트롤러
 using UnityEngine;
 using UnityEngine.EventSystems;
+using DG.Tweening;
+using UnityEngine.UI;
 
 public class TouchManager : MonoBehaviour
 {
@@ -13,18 +14,21 @@ public class TouchManager : MonoBehaviour
     public float maxZoom = 5.0f;
     public float moveSpeed = 10f;
 
+    public LayerMask focusLayerMask;
+    public GameObject uiBlocker; // UI 잠금용 오버레이
+
+    public float focusDuration = 0.5f;
     private Camera cam;
     private Vector3 dragOrigin;
     private bool isDragging;
 
-    void Awake()
-    {
+
+    void Awake() { 
         cam = Camera.main;
     }
 
     void Update()
     {
-        // 에디터/모바일 구분하여 UI 위 터치만 무시
 #if UNITY_EDITOR
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1)) return;
 #else
@@ -43,9 +47,10 @@ public class TouchManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            dragOrigin = cam.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 worldPos = cam.ScreenToWorldPoint(Input.mousePosition);
+            TryFocusAt(worldPos);
+            dragOrigin = worldPos;
             isDragging = true;
-            ShowTouchEffect(Input.mousePosition);
         }
         else if (Input.GetMouseButton(0) && isDragging)
         {
@@ -72,11 +77,13 @@ public class TouchManager : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             if (EventSystem.current.IsPointerOverGameObject(touch.fingerId)) return;
 
+            Vector3 worldPos = cam.ScreenToWorldPoint(touch.position);
+
             if (touch.phase == TouchPhase.Began)
             {
-                dragOrigin = cam.ScreenToWorldPoint(touch.position);
+                TryFocusAt(worldPos);
+                dragOrigin = worldPos;
                 isDragging = true;
-                ShowTouchEffect(touch.position);
             }
             else if (touch.phase == TouchPhase.Moved && isDragging)
             {
@@ -105,18 +112,66 @@ public class TouchManager : MonoBehaviour
         }
     }
 
+    void TryFocusAt(Vector3 worldPosition)
+    {
+        Vector2 origin = new Vector2(worldPosition.x, worldPosition.y);
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.zero, 0f, focusLayerMask);
+
+        if (hit.collider != null)
+        {
+            Vector3 rawTarget = new Vector3(hit.transform.position.x, hit.transform.position.y, cam.transform.position.z);
+
+            // 1. 타겟 줌 크기 설정
+            float targetZoom = Mathf.Clamp(cam.orthographicSize * 0.8f, minZoom, maxZoom);
+
+            // 2. 먼저 줌을 적용해두고, 그걸 기준으로 Clamp 위치 재계산
+            cam.orthographicSize = targetZoom;
+            Vector3 clampedTarget = ClampPosition(rawTarget);
+
+            // 3. 다시 기존 줌으로 되돌려놓고 애니메이션 시작
+            cam.orthographicSize = Mathf.Clamp(cam.orthographicSize / 0.8f, minZoom, maxZoom);
+
+            // 4. 줌 애니메이션
+            DOTween.To(() => cam.orthographicSize, x => cam.orthographicSize = x, targetZoom, focusDuration)
+                .SetEase(Ease.InOutSine);
+
+            // 5. 이동 애니메이션
+            LockUI(true);
+            cam.transform.DOKill();
+            cam.transform.DOMove(clampedTarget, focusDuration)
+                .SetEase(Ease.InOutSine)
+                .OnComplete(() =>
+                {
+                    LockUI(false);
+                    OnFocusComplete(hit.transform);
+                });
+        }
+    }
+
+
+
+    void OnFocusComplete(Transform target)
+    {
+        Debug.Log("포커스 완료: " + target.name);
+        ButtonManager.Instance.OnTowerDetail(target.name);
+    }
+
+    void LockUI(bool state)
+    {
+        if (uiBlocker != null)
+            uiBlocker.SetActive(state);
+    }
+
     void ZoomCamera(float delta, Vector2 focusScreenPoint)
     {
         float oldSize = cam.orthographicSize;
         float newSize = Mathf.Clamp(oldSize - delta * zoomSpeed, minZoom, maxZoom);
-
         if (Mathf.Approximately(oldSize, newSize)) return;
 
         Vector3 focusWorld = cam.ScreenToWorldPoint(focusScreenPoint);
         cam.orthographicSize = newSize;
         Vector3 afterFocusWorld = cam.ScreenToWorldPoint(focusScreenPoint);
         Vector3 diff = focusWorld - afterFocusWorld;
-
         cam.transform.position += diff;
     }
 
@@ -124,18 +179,18 @@ public class TouchManager : MonoBehaviour
     {
         float vertExtent = cam.orthographicSize;
         float horzExtent = vertExtent * cam.aspect;
-
         Vector3 pos = cam.transform.position;
         pos.x = Mathf.Clamp(pos.x, mapMinPosition.x + horzExtent, mapMaxPosition.x - horzExtent);
         pos.y = Mathf.Clamp(pos.y, mapMinPosition.y + vertExtent, mapMaxPosition.y - vertExtent);
         cam.transform.position = pos;
     }
-    void ShowTouchEffect(Vector2 screenPosition)
+    Vector3 ClampPosition(Vector3 targetPos)
     {
-        if (FocusPulsePool.Instance == null) return;
+        float vertExtent = cam.orthographicSize;
+        float horzExtent = vertExtent * cam.aspect;
 
-        FocusPulsePool.Instance.Request(screenPosition);
+        targetPos.x = Mathf.Clamp(targetPos.x, mapMinPosition.x + horzExtent, mapMaxPosition.x - horzExtent);
+        targetPos.y = Mathf.Clamp(targetPos.y, mapMinPosition.y + vertExtent, mapMaxPosition.y - vertExtent);
+        return targetPos;
     }
-
 }
-

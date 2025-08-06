@@ -114,7 +114,11 @@ public class WaveSystem : MonoBehaviour
         currentWave++;
 
         PlayFabStageService.RequestStageClear(currentWave); // 서버 검증 요청
-
+        var reward = new Dictionary<ResourceType, int>{
+            { ResourceType.Gold, 800 },
+            { ResourceType.Diamond, 500 }
+        };
+        ResourceRewardEffectManager.Instance.PlayMultiResourceReward(reward);
         spawn.currentSpawnCount = 0;
         bossHPUI.SetActive(false);
         StartCoroutine(FadeInWinUI());

@@ -26,6 +26,18 @@ public class CharacterManager : MonoBehaviour
     private Dictionary<string, CharacterSaveData> saveQueue = new();
     private float saveTimer = 0f;
     private const float saveDelay = 2f;
+    private class PendingLevelUp
+    {
+        public string characterId;
+        public int levelBefore;
+        public int levelAfter;
+        public int totalGoldUsed;
+    }
+
+    private Dictionary<string, PendingLevelUp> pendingLevelUps = new();
+    private float validationDelay = 2f;
+    private float validationTimer = 0f;
+    private bool validationScheduled = false;
 
     void Awake()
     {
@@ -48,7 +60,19 @@ public class CharacterManager : MonoBehaviour
                 FlushSaveQueue();
             }
         }
+
+        // 서버 검증 타이머
+        if (validationScheduled)
+        {
+            validationTimer += Time.deltaTime;
+            if (validationTimer >= validationDelay)
+            {
+                validationScheduled = false;
+                SendValidationRequest();
+            }
+        }
     }
+
 
     public void RegisterCharacter(Character character)
     {
@@ -112,22 +136,42 @@ public class CharacterManager : MonoBehaviour
 
     public void RequestLevelUp(string characterId)
     {
-        var character = CharacterManager.Instance.GetCharacterByName(characterId);
+        var character = GetCharacterByName(characterId);
         if (character == null) return;
 
         var stat = CharacterStatLoader.GetNextLevelStat(characterId, character.CurrentLevel + 1);
         if (stat == null || PlayerCurrency.Instance.gold.amount < stat.goldRequired) return;
 
+        // 즉시 반영
+        PlayerCurrency.Instance.gold.amount -= stat.goldRequired;
         character.CurrentLevel++;
         character.CurrentAttackPower = stat.attackPower;
         character.CurrentAttackSpeed = stat.attackSpeed;
         character.GoldRequiredForNext = stat.goldRequired;
-        PlayerCurrency.Instance.gold.amount -= stat.goldRequired;
-
-        EnqueueCharacterSave(character);
         UpdateUI(character);
-        Debug.Log($"[레벨업] {characterId} → Lv.{character.CurrentLevel}");
+
+        // 누적 등록
+        if (!pendingLevelUps.ContainsKey(characterId))
+        {
+            pendingLevelUps[characterId] = new PendingLevelUp
+            {
+                characterId = characterId,
+                levelBefore = character.CurrentLevel - 1,
+                levelAfter = character.CurrentLevel,
+                totalGoldUsed = stat.goldRequired
+            };
+        }
+        else
+        {
+            var pending = pendingLevelUps[characterId];
+            pending.levelAfter = character.CurrentLevel;
+            pending.totalGoldUsed += stat.goldRequired;
+        }
+
+        validationTimer = 0f;
+        validationScheduled = true;
     }
+
 
     private void EnqueueCharacterSave(Character character)
     {
@@ -146,42 +190,39 @@ public class CharacterManager : MonoBehaviour
         saveQueue.Clear();
         PlayFabCharacterProgressService.Save(dataToSave);
     }
-
-    public void StartCharacterLevelUpLoop(string characterId)
+    private void SendValidationRequest()
     {
-        if (levelUpLoopCoroutine != null) return;
-        currentLoopCharacterId = characterId;
-        levelUpLoopCoroutine = StartCoroutine(LevelUpLoop());
-    }
-
-    public void StopCharacterLevelUpLoop()
-    {
-        if (levelUpLoopCoroutine != null)
+        foreach (var entry in pendingLevelUps.Values)
         {
-            StopCoroutine(levelUpLoopCoroutine);
-            levelUpLoopCoroutine = null;
-        }
-    }
+            var request = new ExecuteCloudScriptRequest
+            {
+                FunctionName = "MultiLevelUpCharacter",
+                FunctionParameter = new
+                {
+                    characterId = entry.characterId,
+                    count = entry.levelAfter - entry.levelBefore
+                },
+                GeneratePlayStreamEvent = false
+            };
 
-    private Coroutine levelUpLoopCoroutine;
-    private string currentLoopCharacterId;
-
-    private IEnumerator LevelUpLoop()
-    {
-        const float interval = 0.1f;
-
-        while (true)
-        {
-            RequestLevelUp(currentLoopCharacterId);
-
-            var character = GetCharacterByName(currentLoopCharacterId);
-            var stat = CharacterStatLoader.GetNextLevelStat(currentLoopCharacterId, character.CurrentLevel + 1);
-            if (character == null || stat == null || PlayerCurrency.Instance.gold.amount < stat.goldRequired)
-                break;
-
-            yield return new WaitForSeconds(interval);
+            PlayFabClientAPI.ExecuteCloudScript(request,
+                result =>
+                {
+                    Debug.Log($"[서버 레벨업 성공] {entry.characterId}: {entry.levelBefore}→{entry.levelAfter}");
+                    EnqueueCharacterSave(GetCharacterByName(entry.characterId));
+                },
+                error =>
+                {
+                    Debug.LogError($"[서버 레벨업 실패] 롤백 시작: {entry.characterId}");
+                    var c = GetCharacterByName(entry.characterId);
+                    c.CurrentLevel = entry.levelBefore;
+                    c.ApplyCurrentStats();
+                    PlayerCurrency.Instance.gold.amount += entry.totalGoldUsed;
+                    UpdateUI(c);
+                });
         }
 
-        levelUpLoopCoroutine = null;
+        pendingLevelUps.Clear();
     }
+
 }

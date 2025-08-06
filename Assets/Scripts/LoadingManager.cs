@@ -27,6 +27,13 @@ public class LoadingManager : MonoBehaviour
     {
         PlayFabAuthService1.Instance.OnLoginSuccess += () =>
         {
+            PlayFabAuthService1.Instance.FetchDisplayName();
+            string id = PlayFabAuthService1.Instance.PlayFabId;
+            string name = PlayFabAuthService1.Instance.DisplayName;
+
+            SignalRClient.Instance.ConnectAfterLogin(id, name);
+            Debug.Log(id);
+            Debug.Log(name);
             StartCoroutine(LoadDataThenScene());
         };
     }
@@ -35,9 +42,10 @@ public class LoadingManager : MonoBehaviour
     {
         float fakeProgress = 0f;
 
-        // 웹소켓 연결
-        PlayFabChatService.Instance.Connect(PlayFabAuthService1.Instance.PlayFabId);
-        // 데이터 순차 로드
+        if (SignalRClient.Instance == null)
+        {
+            Debug.LogWarning("SignalRClient가 씬에 존재하지 않습니다. 채팅 연결 안 됨.");
+        }
         PlayFabCurrencyService.Load(() =>
         {
             PlayFabStageService.Load((clearedStages, highestStage) =>
@@ -48,7 +56,6 @@ public class LoadingManager : MonoBehaviour
                 });
             });
         });
-
         while (!isDataLoaded)
         {
             // 로딩 UI 진행 효과

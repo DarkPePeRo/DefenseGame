@@ -35,6 +35,7 @@ public static class PlayFabStageService
         {
             List<int> cleared = new();
             int highest = 0;
+            bool shouldSaveDefault = false;
 
             if (result.Data != null)
             {
@@ -44,11 +45,30 @@ public static class PlayFabStageService
                     var data = JsonUtility.FromJson<StageData>(json);
                     cleared = new List<int>(data.clearedStages);
                 }
+                else
+                {
+                    shouldSaveDefault = true;
+                }
 
                 if (result.Data.ContainsKey(HighestKey))
                 {
                     int.TryParse(result.Data[HighestKey].Value, out highest);
                 }
+                else
+                {
+                    shouldSaveDefault = true;
+                }
+            }
+            else
+            {
+                shouldSaveDefault = true;
+            }
+
+            if (shouldSaveDefault)
+            {
+                cleared = new List<int>(); // 아무 것도 안 깼다면 빈 리스트
+                highest = 0;
+                Save(cleared); // 서버에 기본값 저장
             }
 
             HighestClearedStage = highest;
@@ -61,19 +81,27 @@ public static class PlayFabStageService
             onLoaded?.Invoke(new List<int>(), 0);
         });
     }
+
     public static void RequestStageClear(int wave)
     {
         var request = new ExecuteCloudScriptRequest
         {
-            FunctionName = "OnStageClear", // CloudScript 함수 이름
+            FunctionName = "OnStageClear",
             FunctionParameter = new { wave = wave },
             GeneratePlayStreamEvent = true
         };
 
         PlayFabClientAPI.ExecuteCloudScript(request,
-            result => Debug.Log($"[StageClear] {wave}단계 완료"),
-            error => Debug.LogError("[StageClear] 실패: " + error.GenerateErrorReport()));
+            result =>
+            {
+                Debug.Log($"[StageClear] {wave}단계 클리어 서버 저장 완료");
+            },
+            error =>
+            {
+                Debug.LogError("[StageClear] 실패: " + error.GenerateErrorReport());
+            });
     }
+
 }
 
 

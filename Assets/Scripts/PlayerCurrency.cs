@@ -22,7 +22,7 @@ public class PlayerCurrency : MonoBehaviour
     public Currency diamond;
 
     private int goldBuffer = 0;
-    private float saveInterval = 20f;
+    private float saveInterval = 60f;
     private float saveTimer = 0f;
     private bool isSaving = false;
 
