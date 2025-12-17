@@ -29,17 +29,16 @@ public class PlayerCurrency : MonoBehaviour
 
     private void Awake()
     {
-        // 싱글톤 패턴 구현
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 오브젝트 유지
+            DontDestroyOnLoad(gameObject);
             gold = new Currency { name = "gold", amount = 0 };
             diamond = new Currency { name = "diamond", amount = 0 };
         }
         else
         {
-            Destroy(gameObject); // 중복된 오브젝트는 제거
+            Destroy(gameObject);
         }
     }
     private void Update()

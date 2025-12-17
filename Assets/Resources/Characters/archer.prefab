@@ -228,7 +228,7 @@ MonoBehaviour:
   radius: 3
   layer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 320
   colliders: []
   shortEnemy: {fileID: 0}
   shortEnemyObject: {fileID: 0}

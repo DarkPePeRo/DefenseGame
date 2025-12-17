@@ -44,9 +44,11 @@ public class ResourceRewardEffectManager : MonoBehaviour
                 GameObject icon = Instantiate(uiInfo.iconPrefab, uiCanvasTransform);
                 RectTransform rt = icon.GetComponent<RectTransform>();
                 rt.position = uiInfo.startPoint.position;
-
-                Vector2 offset = UnityEngine.Random.insideUnitCircle * 100f;
-                Vector3 spreadPos = rt.position + (Vector3)offset;
+                Vector2 randomOffset = new Vector2(
+    UnityEngine.Random.Range(-400f, -100f),
+    UnityEngine.Random.Range(-600f, -400f) // 위로 퍼지지 않도록
+);
+                Vector3 spreadPos = rt.position + (Vector3)randomOffset;
 
                 rt.DOAnchorPos(spreadPos, 0.1f)
                   .SetEase(Ease.OutQuad)
