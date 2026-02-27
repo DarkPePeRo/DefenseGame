@@ -15,7 +15,7 @@ MonoBehaviour:
   TitleId: 1FD00
   DeveloperSecretKey: JPMUHBSQREK1ESSUPMQM69H7ZQKJQ9BNEDMHWTA95UREKTOUOY
   ProductionEnvironmentUrl: 
-  RequestType: 0
+  RequestType: 2
   DisableDeviceInfo: 0
   DisableFocusTimeCollection: 0
   RequestTimeout: 2000

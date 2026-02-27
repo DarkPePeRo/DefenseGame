@@ -140,10 +140,7 @@ PlayerSettings:
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
   bundleVersion: 1.0.2
-  preloadedAssets:
-  - {fileID: -6836836615313048999, guid: c6db069a73e46c145a99658ce08ca963, type: 2}
-  - {fileID: 11400000, guid: ae2fcc129692c6c4f99475ead4034c46, type: 2}
-  - {fileID: 11400000, guid: 6e6b8a50f4fd66a4db982121973f2ea3, type: 2}
+  preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -720,7 +717,7 @@ PlayerSettings:
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
-    Android: 0
+    Android: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   managedStrippingLevel:

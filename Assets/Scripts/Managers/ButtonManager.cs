@@ -28,6 +28,8 @@ public class ButtonManager : MonoBehaviour
     private CanvasGroup towerCanvasGroup;
     public GameObject[] towerDetailUI;
     private CanvasGroup[] towerDetailCanvasGroup;
+    public GameObject[] towerUpgradeUI;
+    private CanvasGroup[] towerUpgradeCanvasGroup;
     public Sprite[] sprites;
     public GameObject BossUI;
     public GameObject Blocker;
@@ -48,10 +50,15 @@ public class ButtonManager : MonoBehaviour
         spoilsCanvasGroup = spoilsUI.GetComponent<CanvasGroup>();
         // UI 배열 크기만큼 CanvasGroup 배열 생성
         towerDetailCanvasGroup = new CanvasGroup[towerDetailUI.Length];
+        towerUpgradeCanvasGroup = new CanvasGroup[towerUpgradeUI.Length];
 
         for (int i = 0; i < towerDetailUI.Length; i++)
         {
             towerDetailCanvasGroup[i] = towerDetailUI[i].GetComponent<CanvasGroup>();
+        }
+        for (int i = 0; i < towerUpgradeUI.Length; i++)
+        {
+            towerUpgradeCanvasGroup[i] = towerUpgradeUI[i].GetComponent<CanvasGroup>();
         }
         blockerButton = Blocker.GetComponent<Button>();
     }
@@ -111,6 +118,7 @@ public class ButtonManager : MonoBehaviour
     {
         Debug.Log("Shop");
         StartCoroutine(FadeInGodUI());
+        StatUpgradeUI.Instance.UpdateUI();
 
     }
     public void OffGod()
@@ -134,6 +142,16 @@ public class ButtonManager : MonoBehaviour
     public void OffTowerDetail(string name)
     {
         StartCoroutine(FadeOutTowerDetailUI(name));
+    }
+
+    public void OnTowerUpgrade(string name)
+    {
+        StartCoroutine(FadeInTowerUpgradeUI(name));
+
+    }
+    public void OffTowerUpgrade(string name)
+    {
+        StartCoroutine(FadeOutTowerUpgradeUI(name));
     }
     public void HomeButton()
     {
@@ -450,6 +468,92 @@ public class ButtonManager : MonoBehaviour
             // 보정 (정확한 위치/알파 설정)
             rect.anchoredPosition = targetPos;
             spoilsCanvasGroup.alpha = 1f;
+        }
+    }
+    private IEnumerator FadeInTowerUpgradeUI(string name)
+    {
+        int a = 0;
+        switch (name)
+        {
+            case "house":
+                a = 0;
+                break;
+            case "mill":
+                a = 1;
+                break;
+
+        }
+        if (towerUpgradeCanvasGroup[a] != null)
+        {
+            towerUpgradeUI[a].SetActive(true);
+            Blocker.SetActive(true);
+
+            blockerButton.onClick.AddListener(() => OffTowerUpgrade(name));
+
+            float duration = 0.3f;
+            float elapsed = 0f;
+
+            RectTransform rect = towerUpgradeUI[a].GetComponent<RectTransform>();
+            Vector2 targetPos = Vector2.zero; // 원래 위치
+            Vector2 startPos = targetPos + new Vector2(100f, 0f); // 오른쪽에서 등장
+
+            rect.anchoredPosition = startPos;
+            towerUpgradeCanvasGroup[a].alpha = 0f;
+
+            // 부드러운 이동 + 튕김 효과 수동 구현
+            AnimationCurve slideCurve = new AnimationCurve(
+                new Keyframe(0f, 0f),
+                new Keyframe(0.8f, 1.1f),
+                new Keyframe(1f, 1f)
+            );
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+
+                float curvedT = slideCurve.Evaluate(t);
+
+                rect.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, curvedT);
+                towerUpgradeCanvasGroup[a].alpha = t;
+
+                yield return null;
+            }
+
+            // 보정 (정확한 위치/알파 설정)
+            rect.anchoredPosition = targetPos;
+            towerUpgradeCanvasGroup[a].alpha = 1f;
+        }
+    }
+    IEnumerator FadeOutTowerUpgradeUI(string name)
+    {
+        int a = 0;
+        switch (name)
+        {
+            case "house":
+                a = 0;
+                break;
+            case "mill":
+                a = 1;
+                break;
+
+        }
+        if (towerUpgradeCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            towerDetailUI[a].SetActive(false); // UI 비활성화
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                towerUpgradeCanvasGroup[a].alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            towerUpgradeUI[a].SetActive(false);
+            Blocker.SetActive(false);
+            blockerButton.onClick.RemoveAllListeners();
         }
     }
     private IEnumerator FadeOutSpoilsUI()

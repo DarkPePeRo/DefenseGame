@@ -20,9 +20,9 @@ MonoBehaviour:
     highValue: 0
   - itemId: EnhanceStone
     chancePercent: 50
-    amountRange: {x: 2, y: 8}
+    amountRange: {x: 4, y: 6}
     highValue: 0
   - itemId: Gold
     chancePercent: 100
-    amountRange: {x: 300, y: 800}
+    amountRange: {x: 300, y: 300}
     highValue: 0

@@ -65,33 +65,18 @@ public class Thunder : MonoBehaviour
             Debug.Log("Null Target");
             return;
         }
-
         if (target.tag == "Enemy")
         {
             previousPosition = transform.position;
-            targetdir = target.GetComponent<DemoPlayer>().dir;
-            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.8f, 0);
-            StartCoroutine(ThunderAttack());
-        }
-        if (target.tag == "Wolf")
-        {
-            previousPosition = transform.position;
-            targetdir = target.GetComponent<Wolf>().dir;
-            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 0.8f, 0);
+            targetdir = target.GetComponent<PathMover>().dir;
+            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 1.5f, 0);
             StartCoroutine(ThunderAttack());
         }
         if (target.tag == "Boss")
         {
             previousPosition = transform.position;
-            targetdir = target.GetComponent<Boss>().dir;
-            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 1.5f, 0);
-            StartCoroutine(ThunderAttack());
-        }
-        if (target.tag == "EnemyTest")
-        {
-            previousPosition = transform.position;
             targetdir = target.GetComponent<PathMover>().dir;
-            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 1.5f, 0);
+            transform.position = target.transform.position + targetdir * plusDistance + new Vector3(0, 3f, 0);
             StartCoroutine(ThunderAttack());
         }
 
@@ -134,44 +119,19 @@ public class Thunder : MonoBehaviour
         {
             Debug.Log("NullTargetnow");
         }
-        // 타겟이 존재할 때 바로 피격 판정을 수행
         if (target.tag == "Enemy")
         {
-            DemoPlayer targetPlayer = target.GetComponent<DemoPlayer>();
-            if (targetPlayer != null)
+            MonsterHealth monsterhealth = target.GetComponent<MonsterHealth>();
+            if (monsterhealth != null)
             {
-                if (targetPlayer.CurrentHP > 0)
+                if (monsterhealth.currentHP > 0)
                 {
-                    targetPlayer.CurrentHP -= damage;
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                }
-            }
-        }
-        if (target.tag == "Wolf")
-        {
-            Wolf targetPlayer = target.GetComponent<Wolf>();
-            if (targetPlayer != null)
-            {
-                if (targetPlayer.CurrentHP > 0)
-                {
-                    targetPlayer.CurrentHP -= damage;
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
+                    monsterhealth.TakeDamage(damage);
+                    damageUIManager.ShowDamageText(monsterhealth.transform.position + new Vector3(0.3f, 0.5f, 0), damage);
                 }
             }
         }
         if (target.tag == "Boss")
-        {
-            Boss targetPlayer = target.GetComponent<Boss>();
-            if (targetPlayer != null)
-            {
-                if (targetPlayer.CurrentHP > 0)
-                {
-                    targetPlayer.CurrentHP -= damage;
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.5f, 0), damage);
-                }
-            }
-        }
-        if (target.tag == "EnemyTest")
         {
             MonsterHealth monsterhealth = target.GetComponent<MonsterHealth>();
             if (monsterhealth != null)

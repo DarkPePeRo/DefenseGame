@@ -1,4 +1,3 @@
-// ? Google 로그인 + PlayFab 연동 (Android 대응)
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
@@ -10,6 +9,7 @@ using PlayFab.AuthenticationModels;
 public class PlayFabAuthService1 : MonoBehaviour
 {
     public static PlayFabAuthService1 Instance;
+    [SerializeField] private LoadingManager loadingManager;
     public Action OnLoginSuccess;
     public string PlayFabId { get; private set; }
     public string DisplayName { get; private set; }
@@ -28,6 +28,8 @@ public class PlayFabAuthService1 : MonoBehaviour
 
             PlayGamesPlatform.InitializeInstance(config);
             PlayGamesPlatform.Activate();
+            QualitySettings.vSyncCount = 0;   // vSync 끔
+            Application.targetFrameRate = 60; // 60 (원하면 120)
         }
         else Destroy(gameObject);
     }
@@ -64,6 +66,8 @@ public class PlayFabAuthService1 : MonoBehaviour
                 EntityToken = tokenResult.EntityToken;
                 Debug.Log("EntityToken 성공: " + EntityToken);
                 OnLoginSuccess?.Invoke();
+                loadingManager.StartLoading();
+                SignalRClient.Instance.ConnectAfterLogin(result.PlayFabId);
             }, error =>
             {
                 Debug.LogError("EntityToken 실패: " + error.GenerateErrorReport());

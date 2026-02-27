@@ -16,7 +16,6 @@ public class WaveSystem : MonoBehaviour
     public TextMeshProUGUI stage;
     public MultiPrefabPool pool;
     public GameObject BossPrefab;
-    public Boss boss;
 
     public GameObject defeatedUI;
     private CanvasGroup defeatedCanvasGroup;
@@ -30,6 +29,7 @@ public class WaveSystem : MonoBehaviour
 
     public float[] healthMultipliers;
     public int[] goldRewards;
+    public float[] goldMultiplier;
 
     public EndLine endLine;
 
@@ -38,27 +38,12 @@ public class WaveSystem : MonoBehaviour
         defeatedCanvasGroup = defeatedUI.GetComponent<CanvasGroup>();
         winCanvasGroup = winUI.GetComponent<CanvasGroup>();
         bossCanvasGroup = bossUI.GetComponent<CanvasGroup>();
-        boss = BossPrefab.GetComponent<Boss>();
 
         PlayFabStageService.Load((loadedStages, highestStage) => {
             if (loadedStages.Count > 0)
                 currentWave = loadedStages[loadedStages.Count - 1];
             StartWave();
         });
-    }
-
-    private void Update()
-    {
-        if (boss != null && boss.CurrentHP > 0)
-        {
-            bossHPSlider.value = boss.CurrentHP / boss.MaxHP;
-            bossHPText.text = boss.CurrentHP.ToString() + " / " + boss.MaxHP.ToString();
-        }
-        else if (boss != null && boss.CurrentHP <= 0)
-        {
-            OnBossDefeated();
-            boss = null;
-        }
     }
 
     public void StartWave()
@@ -72,8 +57,7 @@ public class WaveSystem : MonoBehaviour
         if (enemyCount > 0)
         {
             Debug.Log("EnemySpawn");
-            spawn.StartCoroutine(spawn.SpawnEnemy("Skeleton"));
-            spawn.StartCoroutine(spawn.SpawnEnemy("Wolf"));
+            spawn.StartCoroutine(spawn.SpawnEnemy("WolfA"));
             spawn.StartCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         }
     }
@@ -83,9 +67,8 @@ public class WaveSystem : MonoBehaviour
         Debug.Log("Again");
         pool.ReturnAllObjects();
         StartCoroutine(FadeInDefeatedUI());
-        spawn.StopCoroutine(spawn.SpawnEnemy("Skeleton"));
-        spawn.StopCoroutine(spawn.SpawnEnemy("Wolf"));
-        spawn.StartCoroutine(spawn.SpawnEnemy("SkeletonTest"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("WolfA"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
         currentWave--;
@@ -94,9 +77,8 @@ public class WaveSystem : MonoBehaviour
 
     public void AgainWaveCharacterChanged()
     {
-        spawn.StopCoroutine(spawn.SpawnEnemy("Skeleton"));
-        spawn.StopCoroutine(spawn.SpawnEnemy("Wolf"));
-        spawn.StartCoroutine(spawn.SpawnEnemy("SkeletonTest"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("WolfA"));
+        spawn.StopCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         pool.ReturnAllObjects();
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
@@ -107,7 +89,7 @@ public class WaveSystem : MonoBehaviour
         enemyCount--;
         if (enemyCount <= 0 && !isBossSpawned)
         {
-            SpawnBoss();
+            spawn.StartCoroutine(spawn.SpawnEnemy("Boss"));
             isBossSpawned = true;
             //StartCoroutine(FadeInBossUI());
         }
@@ -123,35 +105,31 @@ public class WaveSystem : MonoBehaviour
         };
         ResourceRewardEffectManager.Instance.PlayMultiResourceReward(reward);
         spawn.currentSpawnCount = 0;
-        bossHPUI.SetActive(false);
         //StartCoroutine(FadeInWinUI());
         StartWave();
         isBossSpawned = false;
     }
 
-    void SpawnBoss()
-    {
-        GameObject bossObject = Instantiate(BossPrefab);
-        bossObject.transform.position = spawn.spawnPoints[spawn.currentIndex % currentWave].position;
-        boss = bossObject.GetComponent<Boss>();
-        Debug.Log("BossSpawn");
-        bossHPUI.SetActive(true);
-    }
-
     public float GetHealthMultiplier()
     {
         if (currentWave - 1 < healthMultipliers.Length)
-            return healthMultipliers[currentWave - 1];
+            return healthMultipliers[currentWave/100];
         return 1.0f;
     }
 
     public int GetGoldReward()
     {
         if (currentWave - 1 < goldRewards.Length)
-            return goldRewards[currentWave - 1];
+            return goldRewards[currentWave/100];
         return 100;
     }
 
+    public float GetGoldMultiplier()
+    {
+        if (currentWave - 1 < goldRewards.Length)
+            return goldMultiplier[currentWave / 100];
+        return 0;
+    }
     private IEnumerator FadeInDefeatedUI()
     {
         if (defeatedCanvasGroup != null)

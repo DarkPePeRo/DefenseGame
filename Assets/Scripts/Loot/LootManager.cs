@@ -43,12 +43,14 @@ public class LootManager : MonoBehaviour
     // 빠른 테이블 조회
     private readonly Dictionary<string, LootTable> _tableMap = new();
 
+    public WaveSystem wave;
     public RewardUI rewardUI;
 
     void Awake()
     {
         DontDestroyOnLoad(gameObject); // 루트에 두고 유지
         BuildTableMap();
+        wave = GameObject.Find("WaveSystem")?.GetComponent<WaveSystem>();
     }
 
     void Update()
@@ -98,7 +100,12 @@ public class LootManager : MonoBehaviour
         foreach (var r in results)
         {
             // 예시: 아이템 ID에 따라 처리 분기
-            if (r.itemId == "Gold") PlayerCurrency.Instance.AddGoldBuffered(r.amount);
+            if (r.itemId == "Gold")
+            {
+                float goldToBuffered = r.amount * wave.GetGoldMultiplier();
+                double ceiled = Math.Ceiling(goldToBuffered);
+                PlayerCurrency.Instance.AddGoldBuffered((int)ceiled);
+            }
             else if (r.itemId == "EnhanceStone")
             {
                 Debug.Log("EnhanceStone" + r.amount + " 개 획득");
@@ -189,19 +196,6 @@ public class LootManager : MonoBehaviour
             Debug.Log($"[LootManager] SessionSeed set: {seed}");
     }
 
-    #region Simple Loot Table (Sample)
-    [Serializable]
-    public class SimpleLootTable
-    {
-        public string lootTableId = "Default";
-        [Range(0, 1f)] public float baseDropRate = 0.5f;
-        [Range(0, 1f)] public float baseDropRateBoss = 1f;
-        public int softAmountMin = 1;
-        public int softAmountMax = 10;
-
-        // 필요 시: 드랍 항목 리스트/가중치/상자/재료 등 확장
-    }
-    #endregion
     public struct LootResult { public string itemId; public int amount; }
 
     public static class LootRoller

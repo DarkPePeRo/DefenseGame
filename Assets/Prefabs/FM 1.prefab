@@ -18,9 +18,9 @@ GameObject:
   - component: {fileID: 1328870619719119433}
   - component: {fileID: -1604350551912364220}
   - component: {fileID: -8598947703326407899}
-  m_Layer: 8
+  m_Layer: 6
   m_Name: FM 1
-  m_TagString: EnemyTest
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -183,6 +183,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d2b88fa87c487b459169b3f61c30995, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  def: {fileID: 11400000, guid: 63638b4029e4c9140a1af16ef529ce27, type: 2}
   hpBarPrefab: {fileID: 6800500202735510327, guid: 4bd1fb9838fc2f5408772bdfaf806dcb, type: 3}
 --- !u!114 &7113943785434335260
 MonoBehaviour:
@@ -211,6 +212,7 @@ MonoBehaviour:
   def: {fileID: 11400000, guid: 63638b4029e4c9140a1af16ef529ce27, type: 2}
   waitFirst: 0.2
   waitLoop: 0.8
+  _playerRotation: {x: 1, y: 1}
   dir: {x: 0, y: 0, z: 0}
   norm: {x: 0, y: 0, z: 0}
 --- !u!114 &-1604350551912364220

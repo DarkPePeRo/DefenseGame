@@ -17,7 +17,8 @@ public class Currency
 
 public class PlayerCurrency : MonoBehaviour
 {
-    public static PlayerCurrency Instance;
+    public static PlayerCurrency Instance; 
+    public event Action<int> OnGoldChanged;
     public Currency gold;
     public Currency diamond;
 
@@ -26,21 +27,27 @@ public class PlayerCurrency : MonoBehaviour
     private float saveTimer = 0f;
     private bool isSaving = false;
 
-
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            gold = new Currency { name = "gold", amount = 0 };
-            diamond = new Currency { name = "diamond", amount = 0 };
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        if (gold == null) gold = new Currency { name = "gold", amount = 0 };
+        if (diamond == null) diamond = new Currency { name = "diamond", amount = 0 };
     }
+
     private void Update()
     {
         if (goldBuffer <= 0 || isSaving) return;
@@ -56,7 +63,7 @@ public class PlayerCurrency : MonoBehaviour
     {
         goldBuffer += amount;
         gold.amount += amount; // UI 갱신용
-
+        OnGoldChanged?.Invoke(gold.amount);
         Debug.Log($"골드 획득 누적: {amount} → 총 누적: {goldBuffer}");
     }
     private IEnumerator SaveBufferedGoldToServer()
@@ -65,8 +72,6 @@ public class PlayerCurrency : MonoBehaviour
 
         int amountToSave = goldBuffer;
         goldBuffer = 0;
-
-        gold.amount += amountToSave;
 
         Debug.Log($"[골드 저장 요청] 클라 직접 저장: +{amountToSave}, 합계 {gold.amount}");
 
@@ -115,6 +120,19 @@ public class PlayerCurrency : MonoBehaviour
         {
             try
             {
+                if (result == null)
+                {
+                    Debug.LogError("[Diamond] result == null");
+                    return;
+                }
+                if (result.FunctionResult == null)
+                {
+                    Debug.LogError("[Diamond] FunctionResult == null (CloudScript return 없음/서버 오류)");
+                    if (result.Error != null)
+                        Debug.LogError("[Diamond] CloudScriptError: " + result.Error.Message);
+                    return;
+                }
+
                 // JSON 문자열 직접 파싱
                 var jsonText = result.FunctionResult.ToString();
                 var json = PlayFabSimpleJson.DeserializeObject<Dictionary<string, object>>(jsonText);
@@ -122,7 +140,7 @@ public class PlayerCurrency : MonoBehaviour
                 if (json.TryGetValue("newBalance", out var balanceObj))
                 {
                     int balance = Convert.ToInt32(balanceObj);
-                    PlayerCurrency.Instance.diamond.amount = balance;
+                    diamond.amount = balance;
                     Debug.Log($"[Diamond] 지급 완료: {balance}"); 
                     Debug.Log("FunctionResult JSON: " + result.FunctionResult.ToString());
 

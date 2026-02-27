@@ -1,4 +1,3 @@
-// Unity 2D 모바일 카메라 터치 + 포커스 + UI 락 + 트윈 + 콜백 통합 컨트롤러
 using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
@@ -18,17 +17,33 @@ public class TouchManager : MonoBehaviour
     public GameObject uiBlocker; // UI 잠금용 오버레이
 
     public float focusDuration = 0.5f;
+
+    [Header("Tap/Drag")]
+    public float dragThresholdPixels = 12f;   // 이 이상 움직이면 드래그로 판정
+    public float tapMaxTime = 0.35f;          // 선택: 너무 길게 누르면 탭으로 안 보게
+
     private Camera cam;
-    private Vector3 dragOrigin;
+
     private bool isDragging;
+    private bool inputLocked;
 
+    // Tap 판정용
+    private Vector2 pointerDownScreenPos;
+    private float pointerDownTime;
+    private Vector3 dragOriginWorld;
+    private bool focusCandidate;              // Down 시 오브젝트를 눌렀는지
+    private Vector3 focusCandidateWorldPos;   // Up에서 Raycast할 때 쓸 위치(Down 당시)
+    private int activeFingerId = -999;
 
-    void Awake() { 
+    void Awake()
+    {
         cam = Camera.main;
     }
 
     void Update()
     {
+        if (inputLocked) return;
+
 #if UNITY_EDITOR
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1)) return;
 #else
@@ -47,20 +62,51 @@ public class TouchManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 worldPos = cam.ScreenToWorldPoint(Input.mousePosition);
-            TryFocusAt(worldPos);
-            dragOrigin = worldPos;
-            isDragging = true;
+            pointerDownScreenPos = Input.mousePosition;
+            pointerDownTime = Time.unscaledTime;
+
+            Vector3 worldPos = cam.ScreenToWorldPoint(pointerDownScreenPos);
+            worldPos.z = cam.transform.position.z;
+
+            focusCandidateWorldPos = worldPos;
+            focusCandidate = HitFocusable(worldPos); // Down에서는 "후보"만 체크
+
+            dragOriginWorld = worldPos;
+            isDragging = false;
         }
-        else if (Input.GetMouseButton(0) && isDragging)
+        else if (Input.GetMouseButton(0))
         {
-            Vector3 currentPos = cam.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 delta = dragOrigin - currentPos;
-            cam.transform.Translate(delta, Space.World);
+            Vector2 currScreen = Input.mousePosition;
+            float moved = (currScreen - pointerDownScreenPos).magnitude;
+
+            // 임계값 넘으면 드래그 시작(포커스 후보 취소)
+            if (!isDragging && moved >= dragThresholdPixels)
+            {
+                isDragging = true;
+                focusCandidate = false;
+            }
+
+            if (isDragging)
+            {
+                Vector3 currentWorld = cam.ScreenToWorldPoint(currScreen);
+                currentWorld.z = cam.transform.position.z;
+
+                Vector3 delta = dragOriginWorld - currentWorld;
+                cam.transform.Translate(delta, Space.World);
+            }
         }
         else if (Input.GetMouseButtonUp(0))
         {
+            float held = Time.unscaledTime - pointerDownTime;
+
+            // 드래그가 아니고, 짧은 탭이면 포커스 실행
+            if (!isDragging && focusCandidate && held <= tapMaxTime)
+            {
+                TryFocusAt(focusCandidateWorldPos);
+            }
+
             isDragging = false;
+            focusCandidate = false;
         }
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -75,29 +121,63 @@ public class TouchManager : MonoBehaviour
         if (Input.touchCount == 1)
         {
             Touch touch = Input.GetTouch(0);
-            if (EventSystem.current.IsPointerOverGameObject(touch.fingerId)) return;
-
-            Vector3 worldPos = cam.ScreenToWorldPoint(touch.position);
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(touch.fingerId)) return;
 
             if (touch.phase == TouchPhase.Began)
             {
-                TryFocusAt(worldPos);
-                dragOrigin = worldPos;
-                isDragging = true;
-            }
-            else if (touch.phase == TouchPhase.Moved && isDragging)
-            {
-                Vector3 currentPos = cam.ScreenToWorldPoint(touch.position);
-                Vector3 delta = dragOrigin - currentPos;
-                cam.transform.Translate(delta, Space.World);
-            }
-            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-            {
+                activeFingerId = touch.fingerId;
+                pointerDownScreenPos = touch.position;
+                pointerDownTime = Time.unscaledTime;
+
+                Vector3 worldPos = cam.ScreenToWorldPoint(pointerDownScreenPos);
+                worldPos.z = cam.transform.position.z;
+
+                focusCandidateWorldPos = worldPos;
+                focusCandidate = HitFocusable(worldPos); // Down에서는 "후보"만 체크
+
+                dragOriginWorld = worldPos;
                 isDragging = false;
+            }
+            else if (touch.phase == TouchPhase.Moved && touch.fingerId == activeFingerId)
+            {
+                float moved = (touch.position - pointerDownScreenPos).magnitude;
+
+                if (!isDragging && moved >= dragThresholdPixels)
+                {
+                    isDragging = true;
+                    focusCandidate = false;
+                }
+
+                if (isDragging)
+                {
+                    Vector3 currentWorld = cam.ScreenToWorldPoint(touch.position);
+                    currentWorld.z = cam.transform.position.z;
+
+                    Vector3 delta = dragOriginWorld - currentWorld;
+                    cam.transform.Translate(delta, Space.World);
+                }
+            }
+            else if ((touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) && touch.fingerId == activeFingerId)
+            {
+                float held = Time.unscaledTime - pointerDownTime;
+
+                if (!isDragging && focusCandidate && held <= tapMaxTime)
+                {
+                    // 탭으로 확정된 경우에만 포커스
+                    TryFocusAt(focusCandidateWorldPos);
+                }
+
+                isDragging = false;
+                focusCandidate = false;
+                activeFingerId = -999;
             }
         }
         else if (Input.touchCount == 2)
         {
+            // 핀치 중에는 포커스 후보/드래그 상태 리셋(실수 방지)
+            focusCandidate = false;
+            isDragging = false;
+
             Touch t0 = Input.GetTouch(0);
             Touch t1 = Input.GetTouch(1);
 
@@ -112,43 +192,46 @@ public class TouchManager : MonoBehaviour
         }
     }
 
+    bool HitFocusable(Vector3 worldPosition)
+    {
+        Vector2 origin = new Vector2(worldPosition.x, worldPosition.y);
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.zero, 0f, focusLayerMask);
+        return hit.collider != null;
+    }
+
     void TryFocusAt(Vector3 worldPosition)
     {
         Vector2 origin = new Vector2(worldPosition.x, worldPosition.y);
         RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.zero, 0f, focusLayerMask);
 
-        if (hit.collider != null)
+        if (hit.collider == null) return;
+
+        Vector3 rawTarget = new Vector3(hit.transform.position.x, hit.transform.position.y, cam.transform.position.z);
+
+        float targetZoom = Mathf.Clamp(cam.orthographicSize * 0.8f, minZoom, maxZoom);
+
+        // Clamp를 "타겟 줌 기준"으로 계산하려고 임시 적용
+        float prevZoom = cam.orthographicSize;
+        cam.orthographicSize = targetZoom;
+        Vector3 clampedTarget = ClampPosition(rawTarget);
+        cam.orthographicSize = prevZoom;
+
+        LockUI(true);
+        inputLocked = true;
+
+        cam.transform.DOKill();
+        DOTween.Kill(cam); // orthographicSize 트윈도 같이 끊고 싶으면(옵션)
+
+        Sequence seq = DOTween.Sequence();
+        seq.Join(DOTween.To(() => cam.orthographicSize, x => cam.orthographicSize = x, targetZoom, focusDuration).SetEase(Ease.InOutSine));
+        seq.Join(cam.transform.DOMove(clampedTarget, focusDuration).SetEase(Ease.InOutSine));
+        seq.OnComplete(() =>
         {
-            Vector3 rawTarget = new Vector3(hit.transform.position.x, hit.transform.position.y, cam.transform.position.z);
-
-            // 1. 타겟 줌 크기 설정
-            float targetZoom = Mathf.Clamp(cam.orthographicSize * 0.8f, minZoom, maxZoom);
-
-            // 2. 먼저 줌을 적용해두고, 그걸 기준으로 Clamp 위치 재계산
-            cam.orthographicSize = targetZoom;
-            Vector3 clampedTarget = ClampPosition(rawTarget);
-
-            // 3. 다시 기존 줌으로 되돌려놓고 애니메이션 시작
-            cam.orthographicSize = Mathf.Clamp(cam.orthographicSize / 0.8f, minZoom, maxZoom);
-
-            // 4. 줌 애니메이션
-            DOTween.To(() => cam.orthographicSize, x => cam.orthographicSize = x, targetZoom, focusDuration)
-                .SetEase(Ease.InOutSine);
-
-            // 5. 이동 애니메이션
-            LockUI(true);
-            cam.transform.DOKill();
-            cam.transform.DOMove(clampedTarget, focusDuration)
-                .SetEase(Ease.InOutSine)
-                .OnComplete(() =>
-                {
-                    LockUI(false);
-                    OnFocusComplete(hit.transform);
-                });
-        }
+            LockUI(false);
+            inputLocked = false;
+            OnFocusComplete(hit.transform);
+        });
     }
-
-
 
     void OnFocusComplete(Transform target)
     {
@@ -184,6 +267,7 @@ public class TouchManager : MonoBehaviour
         pos.y = Mathf.Clamp(pos.y, mapMinPosition.y + vertExtent, mapMaxPosition.y - vertExtent);
         cam.transform.position = pos;
     }
+
     Vector3 ClampPosition(Vector3 targetPos)
     {
         float vertExtent = cam.orthographicSize;

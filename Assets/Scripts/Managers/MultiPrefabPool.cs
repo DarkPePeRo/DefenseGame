@@ -16,6 +16,7 @@ public class MultiPrefabPool : MonoBehaviour
     public MonsterStatsLoader statsLoader;
     public MonsterData monsterData;
     public List<Pool> pools;         // 풀 목록을 인스펙터에서 관리할 수 있도록 설정
+    public Transform poolRoot;  
     private Dictionary<string, Queue<GameObject>> poolDictionary;
     private List<GameObject> activeObjects = new List<GameObject>(); // 활성화된 오브젝트 리스트
 
@@ -30,7 +31,7 @@ public class MultiPrefabPool : MonoBehaviour
 
             for (int i = 0; i < pool.size; i++)
             {
-                GameObject obj = Instantiate(pool.prefab);
+                GameObject obj = Instantiate(pool.prefab, poolRoot);
                 obj.SetActive(false);
                 objectPool.Enqueue(obj);
             }
@@ -54,32 +55,6 @@ public class MultiPrefabPool : MonoBehaviour
         activeObjects.Add(objectToSpawn); // 활성화된 오브젝트 리스트에 추가
         poolDictionary[tag].Enqueue(objectToSpawn); // 사용한 오브젝트를 다시 큐에 넣기
         
-        DemoPlayer demoPlayer = objectToSpawn.GetComponent<DemoPlayer>();
-        if (demoPlayer != null)
-        {
-            MonsterStat stat = statsLoader.GetMonsterStatByName(tag);
-            if (stat != null)
-            {
-                demoPlayer.SetStats(stat); // DemoPlayer에서 스탯 설정 메서드 호출
-            }
-            else
-            {
-                Debug.LogWarning($"Monster stat not found for {tag}");
-            }
-        }
-        Wolf wolf = objectToSpawn.GetComponent<Wolf>();
-        if (wolf != null)
-        {
-            MonsterStat stat = statsLoader.GetMonsterStatByName(tag);
-            if (stat != null)
-            {
-                wolf.SetStats(stat); // DemoPlayer에서 스탯 설정 메서드 호출
-            }
-            else
-            {
-                Debug.LogWarning($"Monster stat not found for {tag}");
-            }
-        }
         return objectToSpawn;
     }
 

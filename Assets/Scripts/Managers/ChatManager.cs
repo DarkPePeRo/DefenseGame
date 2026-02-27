@@ -1,12 +1,14 @@
+using NativeWebSocket;
+using PimDeWitte.UnityMainThreadDispatcher;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using NativeWebSocket;
-using TMPro;
-using PimDeWitte.UnityMainThreadDispatcher;
-using System.Collections;
-using System;
+using static SignalRClient;
 
 public class ChatManager : MonoBehaviour
 {
@@ -27,16 +29,17 @@ public class ChatManager : MonoBehaviour
     public GameObject chatButton;
     public GameObject chatHome;
     private CanvasGroup chatHomeCanvasGroup;
-    public GameObject topSpacer;
+    public GameObject topSpacerPrefab;
+    private Transform topSpacerInstance;
 
-    private Queue<string> messageQueue = new Queue<string>();
+    private Queue<ChatMessageDto> messageQueue = new Queue<ChatMessageDto>();
     private Coroutine chatHomeFadeCoroutine;
 
     private Dictionary<string, Queue<GameObject>> messagePools = new Dictionary<string, Queue<GameObject>>();
     private Dictionary<string, List<GameObject>> activeMessages = new Dictionary<string, List<GameObject>>();
 
-    [SerializeField] private int maxActiveMessages = 50;
-    [SerializeField] private int maxPoolSize = 100;
+    [SerializeField] private int maxActiveMessages = 20;
+    [SerializeField] private int maxPoolSize = 50;
 
     private class ChatTimeData
     {
@@ -56,32 +59,40 @@ public class ChatManager : MonoBehaviour
         chatHomeCanvasGroup = chatHome.GetComponent<CanvasGroup>();
         chatInputField.onSubmit.AddListener(delegate { SendChatMessage(); });
         StartCoroutine(UpdateChatTimesLoop());
-        SignalRClient.Instance.OnMessageReceived += AppendChatMessage;
+        SignalRClient.Instance.OnMessageReceivedDto += AppendChatMessageDto;
         sendButton.onClick.AddListener(SendChatMessage);
+        EnsureTopSpacer();
     }
 
     void Update()
     {
         while (messageQueue.Count > 0)
         {
-            string message = messageQueue.Dequeue();
+            ChatMessageDto dto = messageQueue.Dequeue();
 
             string myName = PlayFabAuthService1.Instance.DisplayName;
-            string sender = ExtractSenderName(message);
-            string body = ExtractMessageBody(message);
-            DateTime sentTime = ExtractSentTime(message);
+            string sender = dto.Sender ?? "";
+            string body = dto.Body ?? "";
+
+            DateTime sentUtc;
+            if (!DateTime.TryParse(dto.SentUtc, null, DateTimeStyles.RoundtripKind, out sentUtc))
+                sentUtc = DateTime.UtcNow;
+
+            // elapsed 계산은 로컬이든 UTC든 상관 없지만, 기준을 통일하자
+            // FormatElapsedTime이 DateTime.Now 기반이라 localTime으로 변환해서 넣음
+            DateTime sentLocal = sentUtc.ToLocalTime();
 
             bool isMyMessage = sender == myName;
 
             string key = isMyMessage ? "my" : "other";
             string homeKey = isMyMessage ? "my_home" : "other_home";
 
-            GameObject newMessage = CreateChatMessage(key, isMyMessage ? myChatMessagePrefab : otherChatMessagePrefab, chatContent, message);
-            SetMessageTexts(newMessage, sender, body, sentTime, isMyMessage);
+            GameObject newMessage = CreateChatMessage(key, isMyMessage ? myChatMessagePrefab : otherChatMessagePrefab, chatContent);
+            SetMessageTexts(newMessage, sender, body, sentLocal);
             newMessage.transform.SetAsLastSibling();
 
-            GameObject newMessageHome = CreateChatMessage(homeKey, isMyMessage ? myChatMessagePrefabHome : otherChatMessagePrefabHome, chatContentHome, message);
-            SetMessageTexts(newMessageHome, sender, body, sentTime, isMyMessage);
+            GameObject newMessageHome = CreateChatMessage(homeKey, isMyMessage ? myChatMessagePrefabHome : otherChatMessagePrefabHome, chatContentHome);
+            SetMessageTexts(newMessageHome, sender, body, sentLocal);
             newMessageHome.transform.SetAsLastSibling();
 
             if (chatHomeFadeCoroutine != null) StopCoroutine(chatHomeFadeCoroutine);
@@ -99,7 +110,6 @@ public class ChatManager : MonoBehaviour
 
         TMP_Text[] texts = obj.GetComponentsInChildren<TMP_Text>(true);
         foreach (var t in texts) t.text = "";
-
         activeTimeTexts.RemoveAll(c => c.timeText == null || c.timeText.gameObject == obj);
     }
 
@@ -124,19 +134,8 @@ public class ChatManager : MonoBehaviour
         return "오래 전";
     }
 
-    private DateTime ExtractSentTime(string message)
-    {
-        int start = message.LastIndexOf("<time:") + 6;
-        int end = message.LastIndexOf(">");
-        if (start > 5 && end > start)
-        {
-            string timeStr = message.Substring(start, end - start);
-            if (DateTime.TryParse(timeStr, out var parsed)) return parsed;
-        }
-        return DateTime.Now;
-    }
 
-    private GameObject CreateChatMessage(string key, GameObject prefab, Transform parent, string message)
+    private GameObject CreateChatMessage(string key, GameObject prefab, Transform parent)
     {
         GameObject obj = GetPooledMessage(key, prefab, parent);
         if (obj == null) return null;
@@ -191,7 +190,7 @@ public class ChatManager : MonoBehaviour
             Destroy(obj);
     }
 
-    private void SetMessageTexts(GameObject messageObj, string sender, string body, DateTime sentTime, bool isMyMessage)
+    private void SetMessageTexts(GameObject messageObj, string sender, string body, DateTime sentTime)
     {
         TMP_Text[] texts = messageObj.GetComponentsInChildren<TMP_Text>(true);
 
@@ -218,29 +217,11 @@ public class ChatManager : MonoBehaviour
         if (timeText != null)
         {
             timeText.text = FormatElapsedTime(sentTime);
-            activeTimeTexts.Add(new ChatTimeData { timeText = timeText, sentTime = sentTime });
-        }
-    }
 
-    private string ExtractSenderName(string message)
-    {
-        int start = message.IndexOf("[") + 1;
-        int end = message.IndexOf(" ]");
-        if (start >= 0 && end > start)
-        {
-            return message.Substring(start, end - start).Trim();
+            bool already = activeTimeTexts.Exists(x => x.timeText == timeText);
+            if (!already)
+                activeTimeTexts.Add(new ChatTimeData { timeText = timeText, sentTime = sentTime });
         }
-        return "";
-    }
-
-    private string ExtractMessageBody(string message)
-    {
-        int end = message.IndexOf("] ");
-        if (end >= 0 && end + 2 < message.Length)
-        {
-            return message.Substring(end + 2).Trim();
-        }
-        return message;
     }
 
     public void SendChatMessage()
@@ -255,11 +236,10 @@ public class ChatManager : MonoBehaviour
     }
 
 
-    public void AppendChatMessage(string message)
+    public void AppendChatMessageDto(ChatMessageDto dto)
     {
-        messageQueue.Enqueue(message);
+        messageQueue.Enqueue(dto);
     }
-
     public void OnChat()
     {
         StartCoroutine(FadeInChatUI());
@@ -317,21 +297,29 @@ public class ChatManager : MonoBehaviour
             ClearChat();
         }
     }
-
+    private void EnsureTopSpacer()
+    {
+        if (topSpacerInstance != null) return;
+        var go = Instantiate(topSpacerPrefab, chatContentHome, false);
+        topSpacerInstance = go.transform;
+        topSpacerInstance.SetAsFirstSibling();
+    }
     public void ClearChat()
     {
-        foreach (Transform child in chatContentHome)
-        {
-            if (child == topSpacer.transform) continue;
+        EnsureTopSpacer();
 
-            if (child.gameObject.name.Contains("My"))
-                RecycleMessage("my_home", child.gameObject);
-            else
-                RecycleMessage("other_home", child.gameObject);
+        for (int i = chatContentHome.childCount - 1; i >= 0; i--)
+        {
+            var child = chatContentHome.GetChild(i);
+            if (child == topSpacerInstance) continue;
+
+            bool isMy = child.gameObject.name.Contains("My");
+            RecycleMessage(isMy ? "my_home" : "other_home", child.gameObject);
         }
 
-        Instantiate(topSpacer, chatContentHome);
+        topSpacerInstance.SetAsFirstSibling();
         chatScrollRectHome.verticalNormalizedPosition = 0f;
     }
+
 }
 

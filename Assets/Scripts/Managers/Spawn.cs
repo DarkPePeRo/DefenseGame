@@ -31,8 +31,14 @@ public class Spawn : MonoBehaviour
 
     public IEnumerator SpawnEnemy(string enemy)
     {
+        if (enemy == "Boss")
+        {
+            GameObject monster = objectPool.GetObject(enemy);
+            Transform spawnPoint = spawnPoints[0];
+            monster.transform.position = spawnPoint.position;
+            yield break;
+        }
         float nextSpawnTime = Time.time;
-
         while (currentSpawnCount < waveSystem.enemyCountPerWave)
         {
             if (endLine.isEnd)

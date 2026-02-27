@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abe7ed0251878a542ad84cedbd0de1b7, type: 3}
+  m_Name: BuildingConfigDB
+  m_EditorClassIdentifier: 
+  configs:
+  - id: TownHall
+    maxLevel: 5
+    levels:
+    - goldCost: 100
+      durationSec: 10
+      requiredTownHallLv: 0
+      powerAtNextLevel: 10
+      requiredMaterials: 10
+    - goldCost: 200
+      durationSec: 20
+      requiredTownHallLv: 0
+      powerAtNextLevel: 20
+      requiredMaterials: 20
+    - goldCost: 300
+      durationSec: 30
+      requiredTownHallLv: 0
+      powerAtNextLevel: 30
+      requiredMaterials: 30
+    - goldCost: 400
+      durationSec: 40
+      requiredTownHallLv: 0
+      powerAtNextLevel: 40
+      requiredMaterials: 40
+    - goldCost: 500
+      durationSec: 50
+      requiredTownHallLv: 0
+      powerAtNextLevel: 50
+      requiredMaterials: 50
+  - id: LumberMill
+    maxLevel: 5
+    levels:
+    - goldCost: 100
+      durationSec: 10
+      requiredTownHallLv: 1
+      powerAtNextLevel: 10
+      requiredMaterials: 10
+    - goldCost: 200
+      durationSec: 20
+      requiredTownHallLv: 2
+      powerAtNextLevel: 20
+      requiredMaterials: 20
+    - goldCost: 300
+      durationSec: 30
+      requiredTownHallLv: 3
+      powerAtNextLevel: 30
+      requiredMaterials: 30
+    - goldCost: 400
+      durationSec: 40
+      requiredTownHallLv: 4
+      powerAtNextLevel: 40
+      requiredMaterials: 40
+    - goldCost: 500
+      durationSec: 50
+      requiredTownHallLv: 5
+      powerAtNextLevel: 50
+      requiredMaterials: 50

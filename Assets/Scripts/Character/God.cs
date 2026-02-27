@@ -56,7 +56,7 @@ public class God : MonoBehaviour
                 {
                     if (!c.gameObject.activeInHierarchy)
                         continue;
-                    Vector2 p = c.bounds.center;
+                    Vector2 p = c.ClosestPoint(center);
 
                     if (IsPointInPolygon(p, diamond))
                     {
