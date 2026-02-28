@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BossA
   m_EditorClassIdentifier: 
   monsterId: BossA
-  baseHP: 100
+  baseHP: 300
   moveSpeed: 1.2
   goldReward: 5
   lootTableId: 

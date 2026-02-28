@@ -144,9 +144,4 @@ public class Thunder : MonoBehaviour
             }
         }
     }
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

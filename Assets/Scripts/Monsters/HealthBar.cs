@@ -17,7 +17,7 @@ public class HealthBar : MonoBehaviour
 
     void OnEnable()
     {
-        if (def != null && def.monsterId == "Boss")
+        if (def != null && def.monsterId == "BossA")
         {
             if (BossHpHud.Instance != null)
                 BossHpHud.Instance.Bind(hp);
@@ -51,7 +51,7 @@ public class HealthBar : MonoBehaviour
         if (hp != null)
             hp.OnHpChanged -= OnHpChanged;
 
-        if (def != null && def.monsterId == "Boss")
+        if (def != null && def.monsterId == "BossA")
         {
             if (BossHpHud.Instance != null)
                 BossHpHud.Instance.Unbind();

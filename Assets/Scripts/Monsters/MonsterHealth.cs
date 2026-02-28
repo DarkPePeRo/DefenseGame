@@ -1,4 +1,3 @@
-// MonsterHealth.cs
 using UnityEngine;
 
 public interface IDamageable { void TakeDamage(float dmg); }
@@ -10,28 +9,70 @@ public class MonsterHealth : MonoBehaviour, IDamageable
     public float currentHP;
 
     public event System.Action<MonsterHealth> OnDied;
-    public event System.Action<float, float> OnHpChanged; // curr, max
+    public event System.Action<float, float> OnHpChanged;
 
-    [SerializeField] private WaveSystem wave; // 인스펙터 주입
+    [SerializeField] private WaveSystem wave;
+    [SerializeField] private MonsterAnimator anim;
+
+    PathMover mover;
+    Collider2D[] cols; 
+    public bool IsDying { get; private set; }
+    public bool IsTargetable => !IsDying && currentHP > 0;
 
     public void Start()
     {
         wave = GameObject.Find("WaveSystem")?.GetComponent<WaveSystem>();
+        anim = GetComponent<MonsterAnimator>();
+
+        // 추가
+        mover = GetComponent<PathMover>();
+        cols = GetComponentsInChildren<Collider2D>(true);
     }
+
     void OnEnable()
     {
-        float mul = wave != null ? wave.GetHealthMultiplier() : 1f;
-        maxHP = (def ? def.baseHP : 100f) * mul;
+        IsDying = false;
+
+        float mul = wave != null ? wave.currentWave : 1f;
+
+        maxHP = (def ? def.baseHP : 100f) * Mathf.Pow(1.18f, mul);
+
         currentHP = maxHP;
         OnHpChanged?.Invoke(currentHP, maxHP);
+
+        SetColliders(true);
     }
 
     public void TakeDamage(float dmg)
     {
+        if (IsDying) return;
+
         currentHP = Mathf.Max(0, currentHP - dmg);
         OnHpChanged?.Invoke(currentHP, maxHP);
-        if (currentHP <= 0) Die();
+
+        anim.PlayHit();
+
+        if (currentHP <= 0)
+        {
+            IsDying = true;
+
+            mover?.StopMove();
+
+            SetColliders(false);
+
+            anim.PlayDie(Die, 1f);
+        }
     }
 
-    void Die() => OnDied?.Invoke(this);
+    void SetColliders(bool enabled)
+    {
+        if (cols == null) return;
+        for (int i = 0; i < cols.Length; i++)
+            cols[i].enabled = enabled;
+    }
+
+    void Die()
+    {
+        OnDied?.Invoke(this);
+    }
 }

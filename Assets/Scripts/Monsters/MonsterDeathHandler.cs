@@ -33,7 +33,7 @@ public class MonsterDeathHandler : MonoBehaviour
             lootManager.OnMonsterKilled(lootTable, transform.position);
 
         // 3) 웨이브 통지
-        if (wave != null && hp.def.monsterId != "Boss") wave.OnEnemyDefeated();
+        if (wave != null && hp.def.monsterId != "BossA") wave.OnEnemyDefeated();
         else wave.OnBossDefeated();
 
         // 4) 풀 반환

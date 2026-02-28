@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkeletonA
   m_EditorClassIdentifier: 
   monsterId: SkeletonA
-  baseHP: 100
+  baseHP: 50
   moveSpeed: 1.2
   goldReward: 10
   lootTableId: 

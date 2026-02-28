@@ -54,17 +54,21 @@ public class God : MonoBehaviour
             {
                 foreach (var c in candidates)
                 {
-                    if (!c.gameObject.activeInHierarchy)
+                    if (c == null || !c.gameObject.activeInHierarchy)
                         continue;
+
+                    var mh = c.GetComponentInParent<MonsterHealth>();
+                    if (mh != null && !mh.IsTargetable)
+                        continue;
+
                     Vector2 p = c.ClosestPoint(center);
 
                     if (IsPointInPolygon(p, diamond))
                     {
                         result.Add(c);
-                        colliders = result.ToArray();
                     }
                 }
-
+                colliders = result.ToArray();
             }
             else { colliders = new Collider2D[0]; }
             colliders = colliders.Where(c => c != null && c.gameObject.activeInHierarchy).ToArray();
@@ -74,15 +78,29 @@ public class God : MonoBehaviour
             if (colliders.Length > 0)
             {
                 shortEnemy = colliders[colliders.Length - 1];
-                shortEnemyObject = shortEnemy.gameObject;
-                GameObject thunder = objectPool.GetObject("Thunder");
-                if (shortEnemyObject.transform.position.x < transform.position.x)
+
+                // 추가: 마지막 검증
+                if (shortEnemy == null || !shortEnemy.gameObject.activeInHierarchy)
                 {
-                    transform.localScale = new Vector3(-0.6f, 0.6f, 1);
+                    shortEnemyObject = null;
                 }
                 else
                 {
-                    transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                    var mh = shortEnemy.GetComponentInParent<MonsterHealth>();
+                    if (mh != null && !mh.IsTargetable)
+                    {
+                        shortEnemyObject = null;
+                    }
+                    else
+                    {
+                        shortEnemyObject = shortEnemy.gameObject;
+
+                        GameObject thunder = objectPool.GetObject("Thunder");
+                        if (shortEnemyObject.transform.position.x < transform.position.x)
+                            transform.localScale = new Vector3(-0.6f, 0.6f, 1);
+                        else
+                            transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                    }
                 }
             }
             else

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: WolfA
   m_EditorClassIdentifier: 
   monsterId: WolfA
-  baseHP: 100
-  moveSpeed: 2
+  baseHP: 60
+  moveSpeed: 1.5
   goldReward: 5
   lootTableId: 
   isBoss: 0
