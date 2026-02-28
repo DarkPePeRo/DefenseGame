@@ -46,22 +46,10 @@ public class ArrowShooting : MonoBehaviour
             return;
         }
 
-        if (target.tag == "Enemy")
+        if (target.tag == "EnemyTest")
         {
             previousPosition = transform.position;
-            targetdir = target.GetComponent<DemoPlayer>().dir;
-            StartCoroutine(IEFlight());
-        }
-        if (target.tag == "Wolf")
-        {
-            previousPosition = transform.position;
-            targetdir = target.GetComponent<Wolf>().dir;
-            StartCoroutine(IEFlight());
-        }
-        if(target.tag == "Boss")
-        {
-            previousPosition = transform.position;
-            targetdir = target.GetComponent<Boss>().dir;
+            targetdir = target.GetComponent<PathMover>().dir;
             StartCoroutine(IEFlight());
         }
     }
@@ -123,26 +111,6 @@ public class ArrowShooting : MonoBehaviour
     {
         hasPlayedAnimation = false;
     }
-    private void AttackNearbyTargets()
-    {
-        // 데미지 텍스트를 띄울 때마다 새로운 랜덤 데미지 설정
-        SetRandomDamage();
-
-        // 공격 범위 내에 있는 모든 Collider2D 객체를 가져옴
-        Collider2D[] nearbyTargets = Physics2D.OverlapCircleAll(transform.position, attackDistance, LayerMask.GetMask("Enemy"));
-
-        foreach (var targetCollider in nearbyTargets)
-        {
-            // 각 객체에 대해 데미지를 적용
-            DemoPlayer targetPlayer = targetCollider.GetComponent<DemoPlayer>();
-            if (targetPlayer != null)
-            {
-                targetPlayer.CurrentHP -= damage;
-                damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                Debug.Log($"Attacked {targetPlayer.name}, HP left: {targetPlayer.CurrentHP}");
-            }
-        }
-    }
     private void SetRandomDamage()
     {
         isCritical = false;
@@ -167,24 +135,6 @@ public class ArrowShooting : MonoBehaviour
         {
             Debug.Log("NullTargetnow");
         }
-        // 타겟이 존재할 때 바로 피격 판정을 수행
-        if (target.tag == "Enemy")
-        {
-            DemoPlayer targetPlayer = target.GetComponent<DemoPlayer>();
-            if (targetPlayer != null)
-            {
-                if (targetPlayer.CurrentHP > 0)
-                {
-                    targetPlayer.CurrentHP -= damage;
-                    if (isCritical == true)
-                    {
-                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
-                    }
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-                }
-            }
-        }
         if (target.tag == "EnemyTest")
         {
             MonsterHealth targetPlayer = target.GetComponent<MonsterHealth>();
@@ -198,40 +148,6 @@ public class ArrowShooting : MonoBehaviour
                         damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
                     }
                     damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-                }
-            }
-        }
-        if (target.tag == "Wolf")
-        {
-            Wolf targetPlayer = target.GetComponent<Wolf>();
-            if (targetPlayer != null)
-            {
-                if (targetPlayer.CurrentHP > 0)
-                {
-                    targetPlayer.CurrentHP -= damage;
-                    if (isCritical == true)
-                    {
-                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
-                    }
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position, damage);
-                    damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-                }
-            }
-        }
-        if (target.tag == "Boss")
-        {
-            Boss targetPlayer = target.GetComponent<Boss>();
-            if (targetPlayer != null)
-            {
-                if (targetPlayer.CurrentHP > 0)
-                {
-                    targetPlayer.CurrentHP -= damage;
-                    if (isCritical == true)
-                    {
-                        damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
-                    }
-                    damageUIManager.ShowDamageText(targetPlayer.transform.position + new Vector3(0.3f, 0.7f, 0), damage);
                     damageUIManager.damageTextPrefab.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
                 }
             }

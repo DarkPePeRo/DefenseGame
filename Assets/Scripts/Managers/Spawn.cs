@@ -10,7 +10,7 @@ public class Spawn : MonoBehaviour
     public WaveSystem waveSystem;
     public EndLine endLine;
 
-    public List<Transform> spawnPoints = new(); // 여러 스폰 위치
+    public List<Transform> spawnPoints = new();
     public int currentIndex = 0;
 
     void Start()
@@ -19,7 +19,6 @@ public class Spawn : MonoBehaviour
         if (objectPool == null)
             Debug.LogError("Object Pool not found!");
 
-        // 스폰 위치 자동 수집 (원하면 수동으로 할당 가능)
         foreach (Transform child in transform)
             spawnPoints.Add(child);
     }
@@ -53,13 +52,12 @@ public class Spawn : MonoBehaviour
                 if (currentSpawnCount < maxSpawnCount)
                 {
                     GameObject monster = objectPool.GetObject(enemy);
-
+                    monster.GetComponent<MonsterHealth>().Init(waveSystem.currentWave);
                     if (monster != null && spawnPoints.Count > 0)
                     {
                         Transform spawnPoint = spawnPoints[currentIndex];
                         monster.transform.position = spawnPoint.position;
 
-                        // 인덱스 순환
                         currentIndex = (currentIndex + 1) % spawnPoints.Count;
 
                         currentSpawnCount++;

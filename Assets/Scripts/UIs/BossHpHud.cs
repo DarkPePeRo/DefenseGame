@@ -1,4 +1,3 @@
-// BossHpHud.cs (Canvas 하위 고정 UI에 부착)
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,5 +51,6 @@ public class BossHpHud : MonoBehaviour
             int percent = Mathf.FloorToInt(ratio * 100f);
             hpPercentText.text = percent + "%";
         }
+        if (curr < 0) Hide();
     }
 }

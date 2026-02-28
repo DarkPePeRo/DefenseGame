@@ -63,6 +63,6 @@ public class HealthBar : MonoBehaviour
         if (!slider) return;
 
         slider.value = max <= 0 ? 0 : curr / max;
-        slider.gameObject.SetActive(curr < max);
+        slider.gameObject.SetActive(curr < max && curr > 0);
     }
 }

@@ -18,13 +18,10 @@ public class MonsterHealth : MonoBehaviour, IDamageable
     Collider2D[] cols; 
     public bool IsDying { get; private set; }
     public bool IsTargetable => !IsDying && currentHP > 0;
-
-    public void Start()
+    private void Awake()
     {
         wave = GameObject.Find("WaveSystem")?.GetComponent<WaveSystem>();
         anim = GetComponent<MonsterAnimator>();
-
-        // Ãß°¡
         mover = GetComponent<PathMover>();
         cols = GetComponentsInChildren<Collider2D>(true);
     }
@@ -32,13 +29,6 @@ public class MonsterHealth : MonoBehaviour, IDamageable
     void OnEnable()
     {
         IsDying = false;
-
-        float mul = wave != null ? wave.currentWave : 1f;
-
-        maxHP = (def ? def.baseHP : 100f) * Mathf.Pow(1.18f, mul);
-
-        currentHP = maxHP;
-        OnHpChanged?.Invoke(currentHP, maxHP);
 
         SetColliders(true);
     }
@@ -74,5 +64,12 @@ public class MonsterHealth : MonoBehaviour, IDamageable
     void Die()
     {
         OnDied?.Invoke(this);
+    }
+    public void Init(int waveLevel)
+    {
+        float mul = waveLevel;
+        maxHP = (def ? def.baseHP : 100f) * Mathf.Pow(1.18f, mul);
+        currentHP = maxHP;
+        OnHpChanged?.Invoke(currentHP, maxHP);
     }
 }

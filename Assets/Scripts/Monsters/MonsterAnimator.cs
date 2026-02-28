@@ -48,8 +48,6 @@ public class MonsterAnimator : MonoBehaviour
         yield return new WaitForSeconds(duration);
         if (!isDead) anim.SetInteger(State, 2);
     }
-
-    // 핵심: onFinished를 받아서 죽는 연출 후 호출
     public void PlayDie(Action onFinished, float duration = 1f)
     {
         if (isDead) return;
