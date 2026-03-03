@@ -126,9 +126,7 @@ public class WaveSystem : MonoBehaviour
 
     public float GetGoldMultiplier()
     {
-        if (currentWave - 1 < goldRewards.Length)
-            return goldMultiplier[currentWave / 100];
-        return 0;
+        return goldMultiplier[currentWave / 10];
     }
     private IEnumerator FadeInDefeatedUI()
     {

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayFabEditorPrefsSO
   m_EditorClassIdentifier: 
   DevAccountEmail: a01024642761@gmail.com
-  DevAccountToken: 
+  DevAccountToken: axwcan3pd148bh11a4sp3e3sibh57adadecxdccpdudq8985i44ii9y55exp4xqew6afcyh5bhue1ooxbn57j8j9r9in8rxrongs8jit9kzzyz6xx99di8dah6czu6gmcpcm49oq1e848tht14a31isybgs3r5y854iyhu643hm8h5bmxm478s1ibjmodzatab6ag9u1
   AadAuthorization: 
   SelectedStudio: ZH42
   SdkPath: Assets/PlayFabSDK

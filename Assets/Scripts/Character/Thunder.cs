@@ -110,7 +110,7 @@ public class Thunder : MonoBehaviour
     {
         int minDamage = Mathf.FloorToInt(baseDamage * 0.9f); // 최소 10% 감소
         int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f); // 최대 10% 증가
-        damage = Random.Range(minDamage, maxDamage + 1); // 정수형 랜덤 데미지
+        damage = Random.Range(10000 * minDamage, 10000 * maxDamage + 1); // 정수형 랜덤 데미지
     }
     private void AttackTargetDirectly()
     {

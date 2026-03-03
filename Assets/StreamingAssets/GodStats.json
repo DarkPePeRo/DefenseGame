@@ -6,9 +6,11 @@
       "stepValue": 10,
       "maxLevel": 1000,
       "costSegments": [
-        { "from": 1, "to": 100, "baseCost": 100, "rate": 1.032 },
-        { "from": 101, "to": 300, "baseCost": 600000, "rate": 1.03 },
-        { "from": 301, "to": 1000, "baseCost": 200000, "rate": 1.028 }
+        { "from": 1, "to": 100, "baseCost": 100, "rate": 1.048 },
+        { "from": 101, "to": 300, "baseCost": 10400, "rate": 1.03   },
+        { "from": 301, "to": 600, "baseCost": 3730000, "rate": 1.015  },
+        { "from": 601, "to": 1000, "baseCost": 320000000, "rate": 1.008  },
+        { "from": 1001, "to": 5000, "baseCost": 7690000000, "rate": 1.005  }
       ]
     },
     {

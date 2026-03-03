@@ -33,6 +33,7 @@ public class Spawn : MonoBehaviour
         if (enemy == "Boss")
         {
             GameObject monster = objectPool.GetObject(enemy);
+            monster.GetComponent<MonsterHealth>().Init(waveSystem.currentWave);
             Transform spawnPoint = spawnPoints[0];
             monster.transform.position = spawnPoint.position;
             yield break;

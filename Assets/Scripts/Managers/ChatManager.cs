@@ -134,7 +134,6 @@ public class ChatManager : MonoBehaviour
         return "¿À·¡ Àü";
     }
 
-
     private GameObject CreateChatMessage(string key, GameObject prefab, Transform parent)
     {
         GameObject obj = GetPooledMessage(key, prefab, parent);
@@ -316,10 +315,8 @@ public class ChatManager : MonoBehaviour
             bool isMy = child.gameObject.name.Contains("My");
             RecycleMessage(isMy ? "my_home" : "other_home", child.gameObject);
         }
-
         topSpacerInstance.SetAsFirstSibling();
         chatScrollRectHome.verticalNormalizedPosition = 0f;
     }
-
 }
 
