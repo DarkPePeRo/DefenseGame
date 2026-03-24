@@ -37,6 +37,8 @@ public class ButtonManager : MonoBehaviour
     public GameObject spoilsUI;
     private CanvasGroup spoilsCanvasGroup;
     public GameObject spoilsBtn;
+    public GameObject weaponUI;
+    private CanvasGroup weaponCanvasGroup;
     bool isBossClicked = false;
 
     // Start is called before the first frame update
@@ -48,6 +50,7 @@ public class ButtonManager : MonoBehaviour
         godCanvasGroup = godUI.GetComponent<CanvasGroup>();
         towerCanvasGroup = towerUI.GetComponent<CanvasGroup>();
         spoilsCanvasGroup = spoilsUI.GetComponent<CanvasGroup>();
+        weaponCanvasGroup = weaponUI.GetComponent<CanvasGroup>();
         // UI 배열 크기만큼 CanvasGroup 배열 생성
         towerDetailCanvasGroup = new CanvasGroup[towerDetailUI.Length];
         towerUpgradeCanvasGroup = new CanvasGroup[towerUpgradeUI.Length];
@@ -160,6 +163,7 @@ public class ButtonManager : MonoBehaviour
         characterUI.SetActive(false);
         godUI.SetActive(false);
         towerUI.SetActive(false);
+        weaponUI.SetActive(false);
     }
 
     public void OnSpoils()
@@ -170,6 +174,16 @@ public class ButtonManager : MonoBehaviour
     public void OffSpoils()
     {
         StartCoroutine(FadeOutSpoilsUI());
+    }
+
+    public void OnWeapon()
+    {
+        StartCoroutine(FadeInWeaponUI());
+    }
+
+    public void OffWeapon()
+    {
+        StartCoroutine(FadeOutWeaponUI());
     }
 
     private IEnumerator FadeInShopUI()
@@ -572,6 +586,40 @@ public class ButtonManager : MonoBehaviour
 
             spoilsUI.SetActive(false); // UI 비활성화
             spoilsBtn.SetActive(true); // 버튼 활성화
+        }
+    }
+    private IEnumerator FadeInWeaponUI()
+    {
+        if (weaponCanvasGroup != null)
+        {
+            weaponUI.SetActive(true); // UI 활성화
+            float duration = 0.2f; // 페이드 인 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                weaponCanvasGroup.alpha = Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+        }
+    }
+    private IEnumerator FadeOutWeaponUI()
+    {
+        if (weaponCanvasGroup != null)
+        {
+            float duration = 0.2f; // 페이드 아웃 지속 시간
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                weaponCanvasGroup.alpha = 1 - Mathf.Clamp01(elapsed / duration);
+                yield return null;
+            }
+
+            weaponUI.SetActive(false); // UI 비활성화
         }
     }
 }

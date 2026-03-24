@@ -67,6 +67,7 @@ public class PlayFabAuthService1 : MonoBehaviour
                 Debug.Log("EntityToken ¼º°ø: " + EntityToken);
                 OnLoginSuccess?.Invoke();
                 loadingManager.StartLoading();
+                EquipmentInventoryService.Instance.LoadFromServerAfterLogin();
                 SignalRClient.Instance.ConnectAfterLogin(result.PlayFabId);
             }, error =>
             {

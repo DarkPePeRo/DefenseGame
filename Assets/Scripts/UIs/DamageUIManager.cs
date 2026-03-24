@@ -64,23 +64,32 @@ public class DamageUIManager : MonoBehaviour
     {
         long value = (long)damage;
 
-        if (value >= 1_000_000)
-        {
-            long manUnit = value / 10_000;      // 만 단위
-            long remainder = value % 10_000;    // 나머지
+        long eok = value / 100_000_000;                     // 억
+        long man = (value % 100_000_000) / 10_000;          // 만
+        long rest = value % 10_000;                         // 나머지
 
-            if (remainder == 0)
-                return $"{manUnit}만";
+        // 1. 억 단위
+        if (eok > 0)
+        {
+            if (man > 0)
+                return $"{eok}억{man}만";
             else
-                return $"{manUnit}만{remainder}";
+                return $"{eok}억";
         }
-        else if (value >= 1_000)
+
+        // 2. 만 단위
+        if (man > 0)
         {
+            if (rest > 0)
+                return $"{man}만{rest}";
+            else
+                return $"{man}만";
+        }
+
+        // 3. 천 단위 이하
+        if (value >= 1000)
             return value.ToString("N0");
-        }
-        else
-        {
-            return value.ToString();
-        }
+
+        return value.ToString();
     }
 }

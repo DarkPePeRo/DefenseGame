@@ -6,17 +6,18 @@ using Unity.VisualScripting;
 using UnityEngine;
 using System.Linq;
 
-
 public class God : MonoBehaviour
 {
     public MultiPrefabPool objectPool;
     public float timer = 0;
     public float shotDelay;
     public LayerMask layer;
+
     public Collider2D[] colliders;
     public Collider2D shortEnemy;
     public GameObject shortEnemyObject;
-    public float range; // 마름모 범위
+
+    public float range; // 후보 탐색 반경
     public Collider2D[] candidates;
 
     public float tileWidth;
@@ -24,104 +25,162 @@ public class God : MonoBehaviour
 
     public GameObject godDetailUI;
 
+    // 추가: 현재 고정 타겟
+    private Collider2D currentTarget;
+    private MonsterHealth currentTargetHealth;
+
     void Start()
     {
 
     }
 
-
     void Update()
     {
         timer += Time.deltaTime;
-        if (timer > shotDelay - 0.1f)
+
+        if (!IsTargetStillValid(currentTarget))
         {
-            List<Collider2D> result = new List<Collider2D>();
-            Vector2 center = transform.position;
-
-            // 마름모 꼭짓점 4개 계산
-            Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
-            Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
-            Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
-            Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
-
-            // 마름모를 폴리곤으로 정의
-            Vector2[] diamond = new Vector2[] { top, right, bottom, left };
-
-            // 넓은 후보 영역 감지 (아이소메트릭이더라도 먼저 원형으로 뽑음)
-            candidates = Physics2D.OverlapCircleAll(center, range, layer);
-            // 유닛 위치가 마름모 안에 있는지 검사
-            if (candidates != null)
-            {
-                foreach (var c in candidates)
-                {
-                    if (c == null || !c.gameObject.activeInHierarchy)
-                        continue;
-
-                    var mh = c.GetComponentInParent<MonsterHealth>();
-                    if (mh != null && !mh.IsTargetable)
-                        continue;
-
-                    Vector2 p = c.ClosestPoint(center);
-
-                    if (IsPointInPolygon(p, diamond))
-                    {
-                        result.Add(c);
-                    }
-                }
-                colliders = result.ToArray();
-            }
-            else { colliders = new Collider2D[0]; }
-            colliders = colliders.Where(c => c != null && c.gameObject.activeInHierarchy).ToArray();
+            ClearCurrentTarget();
         }
+
+        if (currentTarget == null && timer > shotDelay - 0.1f)
+        {
+            AcquireTarget();
+        }
+
         if (timer > shotDelay)
         {
-            if (colliders.Length > 0)
+            if (!IsTargetStillValid(currentTarget))
             {
-                shortEnemy = colliders[colliders.Length - 1];
+                ClearCurrentTarget();
+            }
 
-                // 추가: 마지막 검증
-                if (shortEnemy == null || !shortEnemy.gameObject.activeInHierarchy)
-                {
-                    shortEnemyObject = null;
-                }
+            if (currentTarget != null)
+            {
+                shortEnemy = currentTarget;
+                shortEnemyObject = currentTarget.gameObject;
+
+                if (shortEnemyObject.transform.position.x < transform.position.x)
+                    transform.localScale = new Vector3(-0.6f, 0.6f, 1);
                 else
-                {
-                    var mh = shortEnemy.GetComponentInParent<MonsterHealth>();
-                    if (mh != null && !mh.IsTargetable)
-                    {
-                        shortEnemyObject = null;
-                    }
-                    else
-                    {
-                        shortEnemyObject = shortEnemy.gameObject;
+                    transform.localScale = new Vector3(0.6f, 0.6f, 1);
 
-                        GameObject thunder = objectPool.GetObject("Thunder");
-                        if (shortEnemyObject.transform.position.x < transform.position.x)
-                            transform.localScale = new Vector3(-0.6f, 0.6f, 1);
-                        else
-                            transform.localScale = new Vector3(0.6f, 0.6f, 1);
-                    }
-                }
+                GameObject thunder = objectPool.GetObject("Thunder");
             }
             else
             {
+                shortEnemy = null;
                 shortEnemyObject = null;
             }
+
             timer = 0;
         }
+    }
+
+    void AcquireTarget()
+    {
+        List<Collider2D> result = new List<Collider2D>();
+        Vector2 center = transform.position;
+
+        Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
+        Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
+        Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
+        Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
+
+        Vector2[] diamond = new Vector2[] { top, right, bottom, left };
+
+        candidates = Physics2D.OverlapCircleAll(center, range, layer);
+
+        if (candidates != null)
+        {
+            foreach (var c in candidates)
+            {
+                if (c == null || !c.gameObject.activeInHierarchy)
+                    continue;
+
+                var mh = c.GetComponentInParent<MonsterHealth>();
+                if (mh != null && !mh.IsTargetable)
+                    continue;
+
+                Vector2 p = c.ClosestPoint(center);
+
+                if (IsPointInPolygon(p, diamond))
+                {
+                    result.Add(c);
+                }
+            }
+        }
+
+        colliders = result
+            .Where(c => c != null && c.gameObject.activeInHierarchy)
+            .ToArray();
+
+        if (colliders.Length > 0)
+        {
+            currentTarget = colliders[colliders.Length - 1];
+            currentTargetHealth = currentTarget.GetComponentInParent<MonsterHealth>();
+
+            shortEnemy = currentTarget;
+            shortEnemyObject = currentTarget.gameObject;
+        }
+        else
+        {
+            ClearCurrentTarget();
+        }
+    }
+
+    bool IsTargetStillValid(Collider2D target)
+    {
+        if (target == null)
+            return false;
+
+        if (!target.gameObject.activeInHierarchy)
+            return false;
+
+        var mh = target.GetComponentInParent<MonsterHealth>();
+        if (mh == null)
+            return false;
+
+        if (!mh.IsTargetable)
+            return false;
+        if (!IsInsideDiamond(target))
+            return false;
+
+        return true;
+    }
+
+    bool IsInsideDiamond(Collider2D target)
+    {
+        Vector2 center = transform.position;
+
+        Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
+        Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
+        Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
+        Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
+
+        Vector2[] diamond = new Vector2[] { top, right, bottom, left };
+
+        Vector2 p = target.ClosestPoint(center);
+        return IsPointInPolygon(p, diamond);
+    }
+
+    void ClearCurrentTarget()
+    {
+        currentTarget = null;
+        currentTargetHealth = null;
+        shortEnemy = null;
+        shortEnemyObject = null;
     }
 
     private void OnDrawGizmos()
     {
         Vector2 center = transform.position;
 
-        // 마름모 꼭짓점 계산
         Vector2 top = center + new Vector2(0, tileHeight * 0.5f);
         Vector2 right = center + new Vector2(tileWidth * 0.5f, 0);
         Vector2 bottom = center - new Vector2(0, tileHeight * 0.5f);
         Vector2 left = center - new Vector2(tileWidth * 0.5f, 0);
 
-        // 마름모 선 그리기
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(top, right);
         Gizmos.DrawLine(right, bottom);
@@ -144,5 +203,4 @@ public class God : MonoBehaviour
         }
         return inside;
     }
-
 }

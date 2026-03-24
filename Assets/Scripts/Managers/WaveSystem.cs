@@ -33,6 +33,8 @@ public class WaveSystem : MonoBehaviour
 
     public EndLine endLine;
 
+    private bool isStageClearProcessing = false;
+
     void Start()
     {
         defeatedCanvasGroup = defeatedUI.GetComponent<CanvasGroup>();
@@ -71,7 +73,6 @@ public class WaveSystem : MonoBehaviour
         spawn.StopCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
-        currentWave--;
         endLine.isEnd = false;
     }
 
@@ -94,22 +95,43 @@ public class WaveSystem : MonoBehaviour
             //StartCoroutine(FadeInBossUI());
         }
     }
+   
     public void OnBossDefeated()
     {
-        currentWave++;
+        if (isStageClearProcessing) return;
+        isStageClearProcessing = true;
 
-        PlayFabStageService.RequestStageClear(currentWave); // 서버 검증 요청
-        var reward = new Dictionary<ResourceType, int>{
-            { ResourceType.Gold, 800 },
-            { ResourceType.Diamond, 500 }
-        };
-        ResourceRewardEffectManager.Instance.PlayMultiResourceReward(reward);
-        spawn.currentSpawnCount = 0;
-        //StartCoroutine(FadeInWinUI());
-        StartWave();
-        isBossSpawned = false;
+        int clearedWave = currentWave + 1;
+
+        PlayFabStageService.RequestStageClear(
+            clearedWave,
+            onSuccess: (result) =>
+            {
+                currentWave = clearedWave;
+
+                var reward = new Dictionary<ResourceType, int>
+                {
+                { ResourceType.Gold, 1000 },
+                { ResourceType.Diamond, 1000 }
+                };
+
+                ResourceRewardEffectManager.Instance.PlayMultiResourceReward(reward);
+
+                spawn.currentSpawnCount = 0;
+                isBossSpawned = false;
+                StartWave();
+
+                isStageClearProcessing = false;
+            },
+            onFail: (error) =>
+            {
+                isStageClearProcessing = false;
+
+                // 여기서 다음 웨이브 시작 금지
+                // 재시도 또는 재동기화 UI
+                Debug.LogError($"[StageClear] 최종 실패: {error}");
+            });
     }
-
     public float GetHealthMultiplier()
     {
         if (currentWave - 1 < healthMultipliers.Length)

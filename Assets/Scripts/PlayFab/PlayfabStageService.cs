@@ -1,13 +1,24 @@
 using PlayFab;
 using PlayFab.ClientModels;
+using PlayFab.PfEditor.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
 public class StageData { public int[] clearedStages; }
+
+[Serializable]
+public class StageClearResult
+{
+    public bool success;
+    public string reason;
+    public int newHighestStage;
+}
+
 public static class PlayFabStageService
 {
+
     private const string StageKey = "ClearedStages";
     private const string HighestKey = "HighestStage";
 
@@ -82,7 +93,7 @@ public static class PlayFabStageService
         });
     }
 
-    public static void RequestStageClear(int wave)
+    public static void RequestStageClear(int wave, Action<StageClearResult> onSuccess, Action<string> onFail)
     {
         var request = new ExecuteCloudScriptRequest
         {
@@ -91,14 +102,56 @@ public static class PlayFabStageService
             GeneratePlayStreamEvent = true
         };
 
-        PlayFabClientAPI.ExecuteCloudScript(request,
+        PlayFabClientAPI.ExecuteCloudScript(
+            request,
             result =>
             {
+                if (result.Error != null)
+                {
+                    string errorMsg = "[StageClear] CloudScript Error: " + result.Error.Message;
+                    Debug.LogError(errorMsg);
+                    onFail?.Invoke(errorMsg);
+                    return;
+                }
+
+                if (result.FunctionResult == null)
+                {
+                    string errorMsg = "[StageClear] FunctionResult == null";
+                    Debug.LogError(errorMsg);
+                    onFail?.Invoke(errorMsg);
+                    return;
+                }
+
+                string json = JsonWrapper.SerializeObject(result.FunctionResult);
+                StageClearResult data = JsonUtility.FromJson<StageClearResult>(json);
+
+                if (data == null)
+                {
+                    string errorMsg = "[StageClear] FunctionResult 파싱 실패";
+                    Debug.LogError(errorMsg);
+                    onFail?.Invoke(errorMsg);
+                    return;
+                }
+
+                if (!data.success)
+                {
+                    string failReason = string.IsNullOrEmpty(data.reason)
+                        ? "[StageClear] 서버에서 클리어 거부"
+                        : "[StageClear] " + data.reason;
+
+                    Debug.LogError(failReason);
+                    onFail?.Invoke(failReason);
+                    return;
+                }
+
                 Debug.Log($"[StageClear] {wave}단계 클리어 서버 저장 완료");
+                onSuccess?.Invoke(data);
             },
             error =>
             {
-                Debug.LogError("[StageClear] 실패: " + error.GenerateErrorReport());
+                string errorMsg = "[StageClear] 실패: " + error.GenerateErrorReport();
+                Debug.LogError(errorMsg);
+                onFail?.Invoke(errorMsg);
             });
     }
 

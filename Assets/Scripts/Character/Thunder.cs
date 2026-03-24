@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Thunder : MonoBehaviour
 {
@@ -10,10 +11,10 @@ public class Thunder : MonoBehaviour
     private DamageUIManager damageUIManager; // DamageUIManager 참조
 
     public float baseDamage;
-    public int damage;
+    public float damage;
     public float attackSpeed;
     public float plusDistance = 0.1f;
-    public God god;
+    public ShadowController shadow;
     public SpriteRenderer sprite;
 
     public GameObject target;
@@ -30,7 +31,7 @@ public class Thunder : MonoBehaviour
             Debug.LogError("Object Pool not found! Please assign a PoolManager with MultiPrefabPool component.");
         }
         damageUIManager = FindObjectOfType<DamageUIManager>();
-        god = FindObjectOfType<God>();
+        shadow = FindObjectOfType<ShadowController>();
         godStatManage = FindObjectOfType<GodStatManage>();
         baseDamage = godStatManage.attackPower;
 
@@ -49,12 +50,12 @@ public class Thunder : MonoBehaviour
         { 
             sprite = GetComponent<SpriteRenderer>();
         }
-        if (god == null)
+        if (shadow == null)
         {
-            god = FindObjectOfType<God>();
+            shadow = FindObjectOfType<ShadowController>();
         }
-        if(god.shortEnemyObject != null){
-            target = god.shortEnemyObject;
+        if(shadow.shortEnemyObject != null){
+            target = shadow.shortEnemyObject;
         }
         if(godStatManage != null)
         {
@@ -110,7 +111,7 @@ public class Thunder : MonoBehaviour
     {
         int minDamage = Mathf.FloorToInt(baseDamage * 0.9f); // 최소 10% 감소
         int maxDamage = Mathf.CeilToInt(baseDamage * 1.1f); // 최대 10% 증가
-        damage = Random.Range(10000 * minDamage, 10000 * maxDamage + 1); // 정수형 랜덤 데미지
+        damage = Random.Range(100000 * minDamage, 100000 * maxDamage + 1); // 정수형 랜덤 데미지
     }
     private void AttackTargetDirectly()
     {
