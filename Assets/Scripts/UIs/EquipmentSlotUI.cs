@@ -16,7 +16,7 @@ public class EquipmentSlotUI : MonoBehaviour
     private string itemId;
     private EquipmentPanelUI owner;
 
-    public void Bind(EquipmentItemDefinition def, int count, EquipmentPanelUI panelOwner, bool selected)
+    public void Bind(EquipmentItemDefinition def, int count, int displayedLevel, EquipmentPanelUI panelOwner, bool selected)
     {
         owner = panelOwner;
         itemId = def.itemId;
@@ -24,7 +24,7 @@ public class EquipmentSlotUI : MonoBehaviour
         if (iconImage) iconImage.sprite = def.icon;
         if (codeText) codeText.text = def.displayCode;
         if (progressText) progressText.text = $"{count}/5";
-        if (levelText) levelText.text = "Lv.1";
+        if (levelText) levelText.text = $"Lv.{displayedLevel}";
         if (redDot) redDot.SetActive(count >= 5);
         if (selectedFrame) selectedFrame.SetActive(selected);
 
