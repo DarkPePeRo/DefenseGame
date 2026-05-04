@@ -8,7 +8,6 @@ public class Spawn : MonoBehaviour
     public int maxSpawnCount = 200;
     public int currentSpawnCount = 0;
     public WaveSystem waveSystem;
-    public EndLine endLine;
 
     public List<Transform> spawnPoints = new();
     public int currentIndex = 0;
@@ -41,13 +40,6 @@ public class Spawn : MonoBehaviour
         float nextSpawnTime = Time.time;
         while (currentSpawnCount < waveSystem.enemyCountPerWave)
         {
-            if (endLine.isEnd)
-            {
-                waveSystem.AgainWave();
-                currentSpawnCount = 0;
-                yield break;
-            }
-
             if (Time.time >= nextSpawnTime)
             {
                 if (currentSpawnCount < maxSpawnCount)

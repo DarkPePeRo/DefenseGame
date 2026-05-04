@@ -8,6 +8,13 @@ using System.Linq;
 
 public class ShadowController : MonoBehaviour
 {
+
+    Animator anim;
+    static readonly int Attack = Animator.StringToHash("Attack");
+    static readonly int Hor = Animator.StringToHash("Horizontal");
+    static readonly int Ver = Animator.StringToHash("Vertical");
+
+
     public MultiPrefabPool objectPool;
     public float timer = 0;
     public float shotDelay;
@@ -32,10 +39,7 @@ public class ShadowController : MonoBehaviour
     private Collider2D currentTarget;
     private MonsterHealth currentTargetHealth;
 
-    void Start()
-    {
-
-    }
+    void Awake() { anim = GetComponent<Animator>(); }
 
     void Update()
     {
@@ -66,29 +70,32 @@ public class ShadowController : MonoBehaviour
                 Vector3 targetPos = shortEnemyObject.transform.position;
                 float distance = Vector2.Distance(transform.position, targetPos);
 
-                // 일정 거리 밖일 때만 이동
                 if (distance > detectionRadius)
                 {
                     PathMover mover = shortEnemy.GetComponent<PathMover>();
                     if (mover != null)
                     {
                         targetdir = mover.dir.normalized;
-                        transform.position = targetPos + (Vector3)(targetdir * plusDistance);
+                        transform.position = new Vector3(0.1f, 0.7f, 8) - (Vector3)(targetdir * plusDistance);
+                        var f = mover.Facing;
+                        anim.SetFloat(Hor, -f.x);
+                        anim.SetFloat(Ver, -f.y);
                     }
                 }
 
-                // 방향 전환은 이동 여부와 별개로 처리
                 if (targetPos.x < transform.position.x)
                     transform.localScale = new Vector3(-0.6f, 0.6f, 1);
                 else
                     transform.localScale = new Vector3(0.6f, 0.6f, 1);
 
-                GameObject thunder = objectPool.GetObject("Thunder");
+                GameObject gumro = objectPool.GetObject("Gumro");
+                StartCoroutine(AttackRoutine(0.2f));
             }
             else
             {
                 shortEnemy = null;
                 shortEnemyObject = null;
+                transform.position = new Vector3(0.1f, 0.7f, 8);
             }
 
             timer = 0;
@@ -220,5 +227,13 @@ public class ShadowController : MonoBehaviour
             }
         }
         return inside;
+    }
+
+    IEnumerator AttackRoutine(float duration)
+    {
+        anim.ResetTrigger(Attack);
+        anim.SetTrigger(Attack);
+
+        yield return new WaitForSeconds(duration);
     }
 }

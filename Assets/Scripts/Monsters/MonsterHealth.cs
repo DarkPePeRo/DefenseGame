@@ -41,7 +41,6 @@ public class MonsterHealth : MonoBehaviour, IDamageable
         OnHpChanged?.Invoke(currentHP, maxHP);
 
         anim.PlayHit();
-
         if (currentHP <= 0)
         {
             IsDying = true;

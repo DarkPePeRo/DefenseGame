@@ -5,9 +5,11 @@ public class PathMover : MonoBehaviour
     public MonsterDefinition def;
     public float waitFirst = 0f, waitLoop = 0f;
     public Vector2 _playerRotation = new Vector2(1, 1);
+    public GameObject shadow;
 
     int index; float timer;
     public Vector3 dir, norm;
+    MonsterHealth health;
 
     public Vector2 Facing => new(Mathf.Sign(norm.x), Mathf.Sign(norm.y));
 
@@ -18,6 +20,8 @@ public class PathMover : MonoBehaviour
         index = 0;
         timer = 0f;
         IsStopped = false;
+        shadow = FindObjectOfType<ShadowController>().gameObject;
+        health = GetComponent<MonsterHealth>();
     }
 
     public void StopMove()
@@ -29,22 +33,29 @@ public class PathMover : MonoBehaviour
 
     void Update()
     {
-        if (IsStopped) return;
-
         timer += Time.deltaTime;
 
-        var target = Waypoints.points[0];
+        var target = shadow.transform;
 
         dir = target.position - transform.position;
         norm = dir.normalized;
 
-        if (dir.sqrMagnitude <= 0.04f)
+        if (dir.sqrMagnitude <= 0.1f)
         {
-            if (index < Waypoints.points.Length - 1) index++;
+            StopMove();
             return;
         }
-
-        float spd = (timer < waitFirst) ? def.moveSpeed * 0.7f : def.moveSpeed;
+        else if (health.IsDying == true)
+        {
+            return;
+        }
+        else
+        {
+            dir = target.position - transform.position;
+            norm = dir.normalized;
+            IsStopped = false;
+        }
+            float spd = (timer < waitFirst) ? def.moveSpeed * 0.7f : def.moveSpeed;
 
         if (timer < waitLoop)
             transform.Translate(norm * spd * Time.deltaTime, Space.World);

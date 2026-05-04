@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   monsterId: SkeletonA
   baseHP: 50
-  moveSpeed: 1.2
+  moveSpeed: 0.6
   goldReward: 10
   lootTableId: 
   isBoss: 0

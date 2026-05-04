@@ -31,7 +31,6 @@ public class WaveSystem : MonoBehaviour
     public int[] goldRewards;
     public float[] goldMultiplier;
 
-    public EndLine endLine;
 
     private bool isStageClearProcessing = false;
 
@@ -73,7 +72,6 @@ public class WaveSystem : MonoBehaviour
         spawn.StopCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         Invoke("StartWave", 2f);
         spawn.currentSpawnCount = 0;
-        endLine.isEnd = false;
     }
 
     public void AgainWaveCharacterChanged()

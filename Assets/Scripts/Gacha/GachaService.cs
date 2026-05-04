@@ -2,7 +2,6 @@ using Best.HTTP.JSON.LitJson;
 using PlayFab;
 using PlayFab.ClientModels;
 using PlayFab.Json;
-using PlayFab.PfEditor.Json;
 using System;
 
 public static class GachaService
@@ -34,8 +33,8 @@ public static class GachaService
 
             try
             {
-                string json = JsonWrapper.SerializeObject(result.FunctionResult);
-                var response = JsonWrapper.DeserializeObject<GetGachaInitDataResponse>(json);
+                string gachaJson = PlayFabSimpleJson.SerializeObject(result.FunctionResult);
+                GetGachaInitDataResponse response = PlayFabSimpleJson.DeserializeObject<GetGachaInitDataResponse>(gachaJson);
                 onSuccess?.Invoke(response);
             }
             catch (Exception e)
@@ -89,8 +88,9 @@ public static class GachaService
 
             try
             {
-                string json = JsonWrapper.SerializeObject(result.FunctionResult);
-                var response = JsonWrapper.DeserializeObject<ExecuteGachaPullResponse>(json);
+                string json = PlayFabSimpleJson.SerializeObject(result.FunctionResult);
+                ExecuteGachaPullResponse response =
+                    PlayFabSimpleJson.DeserializeObject<ExecuteGachaPullResponse>(json);
 
                 if (response == null)
                 {

@@ -53,3 +53,6 @@ TagManager:
   - name: New Layer 2
     uniqueID: 443790011
     locked: 0
+  - name: Monster
+    uniqueID: 1776262287
+    locked: 0

@@ -39,7 +39,10 @@ public class ButtonManager : MonoBehaviour
     public GameObject spoilsBtn;
     public GameObject weaponUI;
     private CanvasGroup weaponCanvasGroup;
+    public GameObject reverse;
+    public GameObject real;
     bool isBossClicked = false;
+    private bool isReverse = false;
 
     // Start is called before the first frame update
     void Start()
@@ -64,6 +67,7 @@ public class ButtonManager : MonoBehaviour
             towerUpgradeCanvasGroup[i] = towerUpgradeUI[i].GetComponent<CanvasGroup>();
         }
         blockerButton = Blocker.GetComponent<Button>();
+        ApplyWorldState();
     }
 
     // Update is called once per frame
@@ -186,6 +190,17 @@ public class ButtonManager : MonoBehaviour
         StartCoroutine(FadeOutWeaponUI());
     }
 
+    public void ToggleWorld()
+    {
+        isReverse = !isReverse;
+        ApplyWorldState();
+    }
+
+    private void ApplyWorldState()
+    {
+        real.SetActive(!isReverse);
+        reverse.SetActive(isReverse);
+    }
     private IEnumerator FadeInShopUI()
     {
         if (shopCanvasGroup != null)

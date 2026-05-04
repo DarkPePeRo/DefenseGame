@@ -1,9 +1,9 @@
 using PlayFab;
 using PlayFab.ClientModels;
-using PlayFab.PfEditor.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using PlayFab.Json;
 
 [Serializable]
 public class StageData { public int[] clearedStages; }
@@ -121,9 +121,8 @@ public static class PlayFabStageService
                     onFail?.Invoke(errorMsg);
                     return;
                 }
-
-                string json = JsonWrapper.SerializeObject(result.FunctionResult);
-                StageClearResult data = JsonUtility.FromJson<StageClearResult>(json);
+                string stageJson = PlayFabSimpleJson.SerializeObject(result.FunctionResult);
+                StageClearResult data = PlayFabSimpleJson.DeserializeObject<StageClearResult>(stageJson);
 
                 if (data == null)
                 {
