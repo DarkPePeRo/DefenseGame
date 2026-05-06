@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class WaveSystem : MonoBehaviour
 {
@@ -15,7 +16,6 @@ public class WaveSystem : MonoBehaviour
     public Spawn spawn;
     public TextMeshProUGUI stage;
     public MultiPrefabPool pool;
-    public GameObject BossPrefab;
 
     public GameObject defeatedUI;
     private CanvasGroup defeatedCanvasGroup;
@@ -31,6 +31,22 @@ public class WaveSystem : MonoBehaviour
     public int[] goldRewards;
     public float[] goldMultiplier;
 
+    public Transform startPosition;
+    public Transform battlePosition;
+    public Transform endPosition;
+    public ShadowController shadow;
+    public float shadowEnterDuration = 1f;
+    public float shadowOutDuration = 1.2f;
+    private Tween shadowMoveTween;
+    private Tween gridMoveTween;
+
+    public GameObject grid1;
+    public GameObject grid2;
+    private GameObject currentGrid;
+    private GameObject nextGrid;
+    public Transform gridMovePosition1;
+    public Transform gridMovePosition2;
+    public Transform gridMovePosition3;
 
     private bool isStageClearProcessing = false;
 
@@ -39,7 +55,8 @@ public class WaveSystem : MonoBehaviour
         defeatedCanvasGroup = defeatedUI.GetComponent<CanvasGroup>();
         winCanvasGroup = winUI.GetComponent<CanvasGroup>();
         bossCanvasGroup = bossUI.GetComponent<CanvasGroup>();
-
+        currentGrid = grid1;
+        nextGrid = grid2;
         PlayFabStageService.Load((loadedStages, highestStage) => {
             if (loadedStages.Count > 0)
                 currentWave = loadedStages[loadedStages.Count - 1];
@@ -55,14 +72,82 @@ public class WaveSystem : MonoBehaviour
         isBossSpawned = false;
         stage.text = "Stage : " + currentWave.ToString();
 
+        StartCoroutine(StartWaveRoutine());
+    }
+    private IEnumerator StartWaveRoutine()
+    {
+        // 1. 그림자 전투 정지
+        if (shadow != null)
+            shadow.SetBattleEnabled(false);
+
+        // 2. 시작 위치로 배치
+        shadow.gameObject.transform.position = startPosition.position;
+
+        // 3. 전투 위치까지 이동
+        shadowMoveTween?.Kill();
+
+        bool moveDone = false;
+
+        shadowMoveTween = shadow.gameObject.transform
+            .DOMove(battlePosition.position, shadowEnterDuration)
+            .SetEase(Ease.OutCubic)
+            .OnComplete(() =>
+            {
+                moveDone = true;
+            });
+
+        yield return new WaitUntil(() => moveDone);
+
+        // 4. 몬스터 스폰
         if (enemyCount > 0)
         {
-            Debug.Log("EnemySpawn");
             spawn.StartCoroutine(spawn.SpawnEnemy("WolfA"));
             spawn.StartCoroutine(spawn.SpawnEnemy("SkeletonTest"));
         }
-    }
 
+        // 5. 전투 시작
+        if (shadow != null)
+            shadow.SetBattleEnabled(true);
+    }
+    private IEnumerator EndWaveRoutine()
+    {
+        if (shadow != null)
+            shadow.SetBattleEnabled(false);
+
+        shadowMoveTween?.Kill();
+
+        bool moveDone = false;
+        Sequence seq = DOTween.Sequence();
+        seq.Append(
+            shadow.gameObject.transform
+            .DOMove(endPosition.position, shadowOutDuration)
+            .SetEase(Ease.OutCubic));
+
+        seq.Append(
+            currentGrid.gameObject.transform
+            .DOMove(gridMovePosition1.position, shadowOutDuration)
+            .SetEase(Ease.OutCubic));
+
+        seq.Join(
+            nextGrid.gameObject.transform
+            .DOMove(gridMovePosition2.position, shadowOutDuration)
+            .SetEase(Ease.InCubic));
+        seq.Join(
+            shadow.gameObject.transform
+            .DOMove(startPosition.position, shadowEnterDuration)
+            .SetEase(Ease.OutCubic));
+        seq.OnComplete(() =>
+        {
+            moveDone = true;
+            });
+
+        yield return new WaitUntil(() => moveDone);
+        currentGrid.gameObject.transform.position = gridMovePosition3.position;
+        GameObject oldGrid = currentGrid;
+        currentGrid = nextGrid;
+        nextGrid = oldGrid;
+        StartWave();
+    }
     public void AgainWave()
     {
         Debug.Log("Again");
@@ -117,7 +202,7 @@ public class WaveSystem : MonoBehaviour
 
                 spawn.currentSpawnCount = 0;
                 isBossSpawned = false;
-                StartWave();
+                StartCoroutine(EndWaveRoutine());
 
                 isStageClearProcessing = false;
             },

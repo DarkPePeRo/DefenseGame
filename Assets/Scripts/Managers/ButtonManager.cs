@@ -42,7 +42,9 @@ public class ButtonManager : MonoBehaviour
     public GameObject reverse;
     public GameObject real;
     bool isBossClicked = false;
-    private bool isReverse = false;
+    public bool isReverse = false;
+
+    public CameraFollow2D cam;
 
     // Start is called before the first frame update
     void Start()
@@ -67,7 +69,6 @@ public class ButtonManager : MonoBehaviour
             towerUpgradeCanvasGroup[i] = towerUpgradeUI[i].GetComponent<CanvasGroup>();
         }
         blockerButton = Blocker.GetComponent<Button>();
-        ApplyWorldState();
     }
 
     // Update is called once per frame
@@ -193,14 +194,9 @@ public class ButtonManager : MonoBehaviour
     public void ToggleWorld()
     {
         isReverse = !isReverse;
-        ApplyWorldState();
+        cam.Reverse(isReverse);
     }
 
-    private void ApplyWorldState()
-    {
-        real.SetActive(!isReverse);
-        reverse.SetActive(isReverse);
-    }
     private IEnumerator FadeInShopUI()
     {
         if (shopCanvasGroup != null)

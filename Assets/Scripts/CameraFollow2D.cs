@@ -5,6 +5,9 @@ using UnityEngine.EventSystems;
 public class CameraFollow2D : MonoBehaviour
 {
     [Header("Target")]
+    public Transform realTarget;
+    public Transform reverseTarget;
+
     public Transform target;
 
     [Tooltip("타겟 기준 오프셋(월드 좌표). 보통 z는 카메라 z 유지용으로 0으로 둠.")]
@@ -31,13 +34,13 @@ public class CameraFollow2D : MonoBehaviour
     {
         cam = GetComponent<Camera>();
         if (cam == null) cam = Camera.main;
+        target = realTarget;
     }
 
     void LateUpdate()
     {
         if (target == null || cam == null) return;
 
-        // 1) 타겟 따라가기
         Vector3 desired = target.position + offset;
         desired.z = transform.position.z; // 카메라 z는 유지(2D 기준)
 
@@ -46,12 +49,10 @@ public class CameraFollow2D : MonoBehaviour
         else
             transform.position = Vector3.SmoothDamp(transform.position, desired, ref velocity, smoothTime);
 
-        // 2) 줌(선택)
         if (enableZoom)
             HandleZoom();
 
-        // 3) 맵 경계 클램프
-        ClampCameraPosition();
+        //ClampCameraPosition();
     }
 
     void HandleZoom()
@@ -93,14 +94,25 @@ public class CameraFollow2D : MonoBehaviour
 #endif
     }
 
-    void ClampCameraPosition()
-    {
-        float vertExtent = cam.orthographicSize;
-        float horzExtent = vertExtent * cam.aspect;
+    //void ClampCameraPosition()
+    //{
+    //    float vertExtent = cam.orthographicSize;
+    //    float horzExtent = vertExtent * cam.aspect;
 
-        Vector3 pos = transform.position;
-        pos.x = Mathf.Clamp(pos.x, mapMinPosition.x + horzExtent, mapMaxPosition.x - horzExtent);
-        pos.y = Mathf.Clamp(pos.y, mapMinPosition.y + vertExtent, mapMaxPosition.y - vertExtent);
-        transform.position = pos;
+    //    Vector3 pos = transform.position;
+    //    pos.x = Mathf.Clamp(pos.x, mapMinPosition.x + horzExtent, mapMaxPosition.x - horzExtent);
+    //    pos.y = Mathf.Clamp(pos.y, mapMinPosition.y + vertExtent, mapMaxPosition.y - vertExtent);
+    //    transform.position = pos;
+    //}
+    public void Reverse(bool reverse)
+    {
+        if (reverse)
+        {
+            target = reverseTarget;
+        }
+        else
+        {
+            target = realTarget;
+        }
     }
 }
